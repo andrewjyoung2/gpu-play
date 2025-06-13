@@ -4,6 +4,7 @@
 #include <iostream>
 #include "src/welcome.hpp"
 #include "src/common/math.hpp"
+#include "src/common/random_float_vector.hpp"
 
 TEST(Example, welcome)
 {
@@ -20,11 +21,16 @@ TEST(Math, VectorMultiply)
 {
   const size_t len { 16 };
 
-  std::vector<float> A(len);
-  std::vector<float> B(len);
-  std::vector<float> C(len);
+  common::RandomFloatVector A(len);
+  common::RandomFloatVector B(len);
+  common::RandomFloatVector C(len);
 
   math::VectorMultiplyHost(C.data(), A.data(), B.data(), len);
+
+  for (size_t idx = 0; idx < 5; ++idx) {
+    std::cout << C[idx] << ", ";
+  }
+  std::cout << std::endl;
 
   EXPECT_EQ(0, 0);
 }

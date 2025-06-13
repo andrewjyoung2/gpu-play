@@ -16,6 +16,7 @@ set(TEST_FILES
   ${CMAKE_SOURCE_DIR}/src/welcome.cu
   ${CMAKE_SOURCE_DIR}/src/common/math.hpp
   ${CMAKE_SOURCE_DIR}/src/common/math.cu
+  ${CMAKE_SOURCE_DIR}/src/common/random_float_vector.hpp
 )
 
 #-------------------------------------------------------------------------------
