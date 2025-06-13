@@ -17,13 +17,15 @@ set(TEST_FILES
   ${CMAKE_SOURCE_DIR}/src/common/math.hpp
   ${CMAKE_SOURCE_DIR}/src/common/math.cu
   ${CMAKE_SOURCE_DIR}/src/common/random_float_vector.hpp
+  ${CMAKE_SOURCE_DIR}/src/common/scalar.hpp
+  ${CMAKE_SOURCE_DIR}/src/common/scalar.cpp
 )
 
 #-------------------------------------------------------------------------------
 add_executable(unit_tests ${TEST_FILES})
 
 target_link_libraries(unit_tests
-  GTest::gtest_main)
+  GTest::gtest_main GTest::gmock)
 target_include_directories(unit_tests
   PRIVATE ${CMAKE_SOURCE_DIR}
   PRIVATE "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}"

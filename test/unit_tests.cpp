@@ -1,10 +1,12 @@
 //#include <cuda_runtime.h>
 #include <cstring>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <iostream>
 #include "src/welcome.hpp"
 #include "src/common/math.hpp"
 #include "src/common/random_float_vector.hpp"
+#include "src/common/scalar.hpp"
 
 TEST(Example, welcome)
 {
@@ -23,14 +25,11 @@ TEST(Math, VectorMultiply)
 
   common::RandomFloatVector A(len);
   common::RandomFloatVector B(len);
-  common::RandomFloatVector C(len);
+  std::vector<float>        C(len);
+  std::vector<float>        expected(len);
 
   math::VectorMultiplyHost(C.data(), A.data(), B.data(), len);
+  math::scalar::VectorMultiply(expected.data(), A.data(), B.data(), len);
 
-  for (size_t idx = 0; idx < 5; ++idx) {
-    std::cout << C[idx] << ", ";
-  }
-  std::cout << std::endl;
-
-  EXPECT_EQ(0, 0);
+  EXPECT_THAT(C, testing::Pointwise(testing::FloatEq(), expected));
 }
