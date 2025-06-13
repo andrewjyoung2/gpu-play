@@ -14,6 +14,8 @@ set(TEST_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.cpp
   ${CMAKE_SOURCE_DIR}/src/welcome.hpp
   ${CMAKE_SOURCE_DIR}/src/welcome.cu
+  ${CMAKE_SOURCE_DIR}/src/common/math.hpp
+  ${CMAKE_SOURCE_DIR}/src/common/math.cu
 )
 
 #-------------------------------------------------------------------------------
