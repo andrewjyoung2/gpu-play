@@ -9,7 +9,7 @@ void VectorMultiply(float* C,
                     const size_t len)
 {
   for (size_t idx = 0; idx < len; ++idx) {
-    C[idx] = A[idx] + B[idx];
+    C[idx] = A[idx] * B[idx];
   }
 }
 
