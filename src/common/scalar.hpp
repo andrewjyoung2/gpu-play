@@ -4,6 +4,8 @@
 
 namespace math { namespace scalar {
 
+float Accumulate(float* A, const size_t len);
+
 void VectorMultiply(float* C,
                     float* A,
                     float* B,

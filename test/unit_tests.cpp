@@ -33,3 +33,11 @@ TEST(Math, VectorMultiply)
 
   EXPECT_THAT(C, testing::Pointwise(testing::FloatEq(), expected));
 }
+
+TEST(Scalar, Accumulate)
+{
+  std::vector<float> A { 1.0f, 2.0f, 3.0f, 4.0f };
+  const auto result = math::scalar::Accumulate(A.data(), A.size());
+  EXPECT_FLOAT_EQ(10.0f, result);
+}
+
