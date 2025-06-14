@@ -16,9 +16,24 @@ __global__ void VectorMultiply(float* C,
 }
 
 //------------------------------------------------------------------------------
-__global__ void Accumulate(float* d_result, float* d_A)
+__global__ void Accumulate(float* d_result, float* d_A, const size_t len)
 {
-  *d_result = 10.0f;
+  __shared__ float scratch[MAX_CUDA_THREADS];
+
+  const int idx = threadIdx.x;
+
+  // Step 0
+  if (2 * idx + 1 < len) {
+    scratch[idx] = d_A[2 * idx] + d_A[2 * idx + 1];
+  }
+
+  __syncthreads();
+
+  // Step 1
+  if (0 == idx) {
+    scratch[len / 2] = scratch[0] + scratch[1];
+    *d_result = scratch[len / 2];
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -28,7 +43,7 @@ __host__ void AccumulateDevice(float* d_result, float* d_A, const size_t len)
     throw std::runtime_error("len must be less than MAX_CUDA_THREADS");
   }
 
-  Accumulate<<<1, len>>>(d_result, d_A);
+  Accumulate<<<1, len / 2>>>(d_result, d_A, len);
 }
 
 //------------------------------------------------------------------------------
