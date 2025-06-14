@@ -22,18 +22,21 @@ __global__ void Accumulate(float* d_result, float* d_A, const size_t len)
 
   const int idx = threadIdx.x;
 
-  // Step 0
-  if (2 * idx + 1 < len) {
-    scratch[idx] = d_A[2 * idx] + d_A[2 * idx + 1];
+  size_t numThreads = len >> 1;
+  float* readPtr    = d_A;
+  float* writePtr   = scratch;
+
+  while (numThreads) {
+    writePtr[idx] = readPtr[2 * idx] + readPtr[2 * idx + 1];
+
+    __syncthreads();
+
+    readPtr = writePtr;
+    writePtr += numThreads;
+    numThreads >>= 1;
   }
 
-  __syncthreads();
-
-  // Step 1
-  if (0 == idx) {
-    scratch[len / 2] = scratch[0] + scratch[1];
-    *d_result = scratch[len / 2];
-  }
+  *d_result = *readPtr;
 }
 
 //------------------------------------------------------------------------------

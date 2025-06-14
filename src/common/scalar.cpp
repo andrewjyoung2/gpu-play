@@ -1,3 +1,4 @@
+#include <vector>
 #include "src/common/scalar.hpp"
 
 namespace math { namespace scalar {
@@ -12,6 +13,27 @@ float Accumulate(float* A, const size_t len)
   }
 
   return result;
+}
+
+//------------------------------------------------------------------------------
+float AccumulateProto(float* A, const size_t len)
+{
+  std::vector<float> scratch(len);
+
+  size_t numThreads = len >> 1;
+  float* readPtr    = A;
+  float* writePtr   = scratch.data();
+
+  while (numThreads) {
+    for (size_t idx = 0; idx < numThreads; ++idx) {
+      writePtr[idx] = readPtr[2 * idx] + readPtr[2 * idx + 1];
+    }
+    readPtr    =   writePtr;
+    writePtr   +=  numThreads;
+    numThreads >>= 1;
+  }
+
+  return readPtr[0];
 }
 
 //------------------------------------------------------------------------------

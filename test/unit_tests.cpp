@@ -41,10 +41,33 @@ TEST(Scalar, Accumulate)
   EXPECT_FLOAT_EQ(10.0f, result);
 }
 
+TEST(Scalar, AccumulateProto)
+{
+  {
+    std::vector<float> A(2, 1.0f);
+    const auto result = math::scalar::AccumulateProto(A.data(), A.size());
+    EXPECT_FLOAT_EQ(2 * 1.0f, result);
+  }
+
+  {
+    std::vector<float> A(128, 1.0f);
+    const auto result = math::scalar::AccumulateProto(A.data(), A.size());
+    EXPECT_FLOAT_EQ(128 * 1.0f, result);
+  }
+}
+
 TEST(Math, Accumulate)
 {
-  std::vector<float> A { 1.0f, 2.0f, 3.0f, 4.0f };
-  const auto result = math::AccumulateHost(A.data(), A.size());
-  EXPECT_FLOAT_EQ(10.0f, result);
+  {
+    std::vector<float> A(2, 1.0f);
+    const auto result = math::AccumulateHost(A.data(), A.size());
+    EXPECT_FLOAT_EQ(2 * 1.0f, result);
+  }
+
+  {
+    std::vector<float> A(128, 1.0f);
+    const auto result = math::AccumulateHost(A.data(), A.size());
+    EXPECT_FLOAT_EQ(128 * 1.0f, result);
+  }
 }
 
