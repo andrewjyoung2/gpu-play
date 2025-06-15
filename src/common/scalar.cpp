@@ -20,12 +20,13 @@ float AccumulateProto(float* A, const size_t len)
 {
   std::vector<float> scratch(len);
 
-  size_t numThreads = len >> 1;
+  size_t numThreads = (len + 1) >> 1;
   float* readPtr    = A;
   float* writePtr   = scratch.data();
 
   while (numThreads) {
     for (size_t idx = 0; idx < numThreads; ++idx) {
+      // TODO: if len is not a power of 2, how do we know the data is valid?
       writePtr[idx] = readPtr[2 * idx] + readPtr[2 * idx + 1];
     }
     readPtr    =   writePtr;
