@@ -19,19 +19,20 @@ float Accumulate(float* A, const size_t len)
 //------------------------------------------------------------------------------
 float AccumulateProto(float* A, const size_t len)
 {
-  const size_t blockDim = (len + 1) >> 1;
-
   // TODO: how much scratch is actually necessary?
   std::vector<float> scratch(2 * len); // __shared__
 
-  size_t numThreads = blockDim;
+  size_t numThreads = len;
   float* readPtr    = A;
   float* readEnd    = A + len;
   float* writePtr   = scratch.data();
 
-  while (numThreads) {
+  do {
+    numThreads = (numThreads + 1) >> 1;
+
     for (size_t idx = 0; idx < numThreads; ++idx) {
       writePtr[idx] = readPtr[2 * idx];
+
       if (readPtr + 2 * idx + 1 < readEnd) {
         writePtr[idx] += readPtr[2 * idx + 1];
       }
@@ -40,12 +41,7 @@ float AccumulateProto(float* A, const size_t len)
     readPtr    =   writePtr;
     readEnd    =   readPtr + numThreads;
     writePtr   +=  numThreads;
-
-    if (1 == numThreads) {
-      break;
-    }
-    numThreads = (numThreads + 1) >> 1;
-  }
+  } while (1 != numThreads);
 
   return readPtr[0];
 }
