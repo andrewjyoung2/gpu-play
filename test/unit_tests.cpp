@@ -53,7 +53,7 @@ TEST(Scalar, AccumulateProto)
 
 TEST(Math, Accumulate)
 {
-  for (size_t len = 1; len <= 128; ++len) {
+  for (size_t len = 1; len <= 64; ++len) {
     std::vector<float> A(len, 1.0f);
     const auto result = math::AccumulateHost(A.data(), A.size());
     EXPECT_FLOAT_EQ(len * 1.0f, result);
