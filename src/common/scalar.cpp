@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 #include "src/common/scalar.hpp"
 
@@ -18,20 +19,32 @@ float Accumulate(float* A, const size_t len)
 //------------------------------------------------------------------------------
 float AccumulateProto(float* A, const size_t len)
 {
-  std::vector<float> scratch(len);
+  const size_t blockDim = (len + 1) >> 1;
 
-  size_t numThreads = (len + 1) >> 1;
+  // TODO: how much scratch is actually necessary?
+  std::vector<float> scratch(2 * len); // __shared__
+
+  size_t numThreads = blockDim;
   float* readPtr    = A;
+  float* readEnd    = A + len;
   float* writePtr   = scratch.data();
 
   while (numThreads) {
     for (size_t idx = 0; idx < numThreads; ++idx) {
-      // TODO: if len is not a power of 2, how do we know the data is valid?
-      writePtr[idx] = readPtr[2 * idx] + readPtr[2 * idx + 1];
+      writePtr[idx] = readPtr[2 * idx];
+      if (readPtr + 2 * idx + 1 < readEnd) {
+        writePtr[idx] += readPtr[2 * idx + 1];
+      }
     }
+
     readPtr    =   writePtr;
+    readEnd    =   readPtr + numThreads;
     writePtr   +=  numThreads;
-    numThreads >>= 1;
+
+    if (1 == numThreads) {
+      break;
+    }
+    numThreads = (numThreads + 1) >> 1;
   }
 
   return readPtr[0];
