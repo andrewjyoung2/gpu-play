@@ -64,8 +64,8 @@ TEST(Math, Accumulate)
 TEST(cuBLAS, Ddot)
 {
   std::vector<double> A(10, 2.0);
-  std::vector<double> B(10, 2.0);
+  std::vector<double> B(10, 3.0);
 
   const auto res = cublas_wrap::Ddot(A, B);
-  EXPECT_FLOAT_EQ(res, 20.0);
+  EXPECT_FLOAT_EQ(res, 60.0);
 }
