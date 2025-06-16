@@ -19,7 +19,6 @@ printf('Generating dataset for Gaussian mixture model\n')
 
 % Transpose the observations and means so that each row is a vector
 x=X';     % 500 x 2
-m=m_ini'; % 3 x 2
 
 % Save generated data to text files
 directory=make_absolute_filename('../test/data/test1');
@@ -37,6 +36,8 @@ m_ini=[m1_ini m2_ini m3_ini];
 s_ini=[.15 .27 .4];
 Pa_ini=[1/3 1/3 1/3];
 e_min=10^(-5);
+
+m=m_ini'; % 3 x 2
 save('-ascii',[directory,'/initial_mean.txt'],'m')
 save('-ascii',[directory,'/initial_covariance.txt'],'s_ini')
 save('-ascii',[directory,'/initial_priors.txt'],'Pa_ini')
