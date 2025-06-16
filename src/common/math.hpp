@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cuda_runtime.h>
+
 namespace math {
 
 __host__ void AccumulateDevice(float* d_result, float* A, const size_t len);

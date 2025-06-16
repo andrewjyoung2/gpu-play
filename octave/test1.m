@@ -17,6 +17,9 @@ sed=0;
 printf('Generating dataset for Gaussian mixture model\n')
 [X,y]=mixt_model(m,S,P,N,sed);
 
+% Transpose so that each row is an observation
+x=X';
+
 % Save generated data to text files
 directory=make_absolute_filename('../test/data/test1');
 if isfolder(directory)
@@ -24,7 +27,7 @@ if isfolder(directory)
 end
 mkdir(directory);
 printf('Saving test inputs to %s\n', directory)
-save('-ascii',[directory, '/observations.txt'],'X')
+save('-ascii',[directory, '/observations.txt'],'x')
 save('-ascii',[directory, '/classes.txt'],'y')
 
 % Save initial estimates to text files
@@ -37,3 +40,9 @@ save('-ascii',[directory,'/initial_mean.txt'],'m_ini')
 save('-ascii',[directory,'/initial_covariance.txt'],'s_ini')
 save('-ascii',[directory,'/initial_priors.txt'],'Pa_ini')
 save('-ascii',[directory,'/error_threshold.txt'],'e_min')
+
+% Evaluate Gaussian at observations
+m=m_ini';
+k=1
+tmp=gauss(x(k,:),m,s_ini);
+tmp
