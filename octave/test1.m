@@ -17,8 +17,9 @@ sed=0;
 printf('Generating dataset for Gaussian mixture model\n')
 [X,y]=mixt_model(m,S,P,N,sed);
 
-% Transpose so that each row is an observation
-x=X';
+% Transpose the observations and means so that each row is a vector
+x=X';     % 500 x 2
+m=m_ini'; % 3 x 2
 
 % Save generated data to text files
 directory=make_absolute_filename('../test/data/test1');
@@ -36,13 +37,22 @@ m_ini=[m1_ini m2_ini m3_ini];
 s_ini=[.15 .27 .4];
 Pa_ini=[1/3 1/3 1/3];
 e_min=10^(-5);
-save('-ascii',[directory,'/initial_mean.txt'],'m_ini')
+save('-ascii',[directory,'/initial_mean.txt'],'m')
 save('-ascii',[directory,'/initial_covariance.txt'],'s_ini')
 save('-ascii',[directory,'/initial_priors.txt'],'Pa_ini')
 save('-ascii',[directory,'/error_threshold.txt'],'e_min')
 
 % Evaluate Gaussian at observations
-m=m_ini';
-k=1
-tmp=gauss(x(k,:),m,s_ini);
-tmp
+[p,n]=size(x)
+[J,n]=size(m)
+Pa=Pa_ini;
+clear P;
+for k=1:p
+  tmp=gauss(x(k,:),m,s_ini);
+  P_tot=tmp*Pa';
+  for j=1:J
+    P(j,k)=tmp(j)*Pa(j)/P_tot;
+  end
+end
+
+size(P)
