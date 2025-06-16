@@ -30,17 +30,30 @@ void Posterior(common::Matrix<float>&       posteriors,
   // Step 1: Calculate matrix of Gaussian densities
   // dens(k, j) = j-th Gaussian evaluated at k-th observation
   for (int j = 0; j < numClasses; ++j) {
+    const auto  m = means.get_row(j);
+    const auto  s = covariances[j];
+    const float c = 1 / (2 * M_PI * s);
+
     for (int k = 0; k < numObs; ++k) {
       const auto  x = observations.get_row(k);
-      const auto  m = means.get_row(j);
-      const auto  s = covariances[j];
-      const float c = 1 / (2 * M_PI * s);
 
       const float normSquared = std::pow(x[0] - m[0], 2)
                               + std::pow(x[1] - m[1], 2);
 
       densities(k, j) = c * std::exp(-normSquared / (2 * s));
     }
+  }
+
+  // Step 2: Calculate the vector of denominators
+  // denom(k) = sum_j dens(k,j) * prior(j)
+  for (int k = 0; k < numObs; ++k) {
+    float tmp { 0 };
+
+    for (int j = 0; j < numClasses; ++j) {
+      tmp += densities(k, j) * priors[j];
+    }
+
+    denominators[k] = tmp;
   }
 }
 

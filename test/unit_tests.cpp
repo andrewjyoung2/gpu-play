@@ -191,5 +191,13 @@ TEST(Scalar, Posterior)
       EXPECT_NEAR(dens(k, j), exp_dens(k, j), eps);
     }
   }
+
+  const auto exp_denom = common::ReadMatrix<float>("../test/data/test1/denominators.txt");
+  EXPECT_EQ(exp_denom.rows(), 1);
+  EXPECT_EQ(exp_denom.cols(), numObs);
+
+  for (int k = 0; k < numObs; ++k) {
+    EXPECT_NEAR(denom[k], exp_denom(0, k), eps);
+  }
 }
 

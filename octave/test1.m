@@ -48,14 +48,18 @@ save('-ascii',[directory,'/error_threshold.txt'],'e_min')
 [J,n]=size(m)
 Pa=Pa_ini;
 clear P;
-D=[];
+density=[];
+denominator=[];
 for k=1:p
   tmp=gauss(x(k,:),m,s_ini);
-  D=[D;tmp];
+  density=[density;tmp];
   P_tot=tmp*Pa';
+  denominator=[denominator, P_tot];
   for j=1:J
     P(j,k)=tmp(j)*Pa(j)/P_tot;
   end
 end
 
-save('-ascii',[directory,'/densities.txt'],'D')
+save('-ascii',[directory,'/densities.txt'],'density')
+save('-ascii',[directory,'/denominators.txt'],'denominator')
+
