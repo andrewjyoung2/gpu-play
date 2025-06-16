@@ -25,6 +25,7 @@ set(TEST_FILES
   ${CMAKE_SOURCE_DIR}/src/cublas/cublas_wrap.cu
   ${CMAKE_SOURCE_DIR}/src/cublas/cublas_wrap.hpp
   ${CMAKE_SOURCE_DIR}/src/em_alg/posterior.cpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/posterior.cu
   ${CMAKE_SOURCE_DIR}/src/em_alg/posterior.hpp
   ${CMAKE_SOURCE_DIR}/src/welcome.cu
   ${CMAKE_SOURCE_DIR}/src/welcome.hpp
