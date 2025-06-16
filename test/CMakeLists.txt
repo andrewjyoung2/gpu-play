@@ -19,6 +19,7 @@ set(TEST_FILES
   ${CMAKE_SOURCE_DIR}/src/common/random_float_vector.hpp
   ${CMAKE_SOURCE_DIR}/src/common/scalar.cpp
   ${CMAKE_SOURCE_DIR}/src/common/scalar.hpp
+  ${CMAKE_SOURCE_DIR}/src/common/vector.hpp
   ${CMAKE_SOURCE_DIR}/src/cublas/cublas_wrap.cu
   ${CMAKE_SOURCE_DIR}/src/cublas/cublas_wrap.hpp
   ${CMAKE_SOURCE_DIR}/src/common/file_io.hpp

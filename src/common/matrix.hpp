@@ -14,6 +14,8 @@ public:
     ASSERT(m_cols > 0);
 
     m_data = new T[m_rows * m_cols];
+
+    ASSERT(nullptr != m_data);
   }
 
   virtual ~Matrix()

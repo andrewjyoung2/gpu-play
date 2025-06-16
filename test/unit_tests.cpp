@@ -7,6 +7,7 @@
 #include "src/common/matrix.hpp"
 #include "src/common/random_float_vector.hpp"
 #include "src/common/scalar.hpp"
+#include "src/common/vector.hpp"
 #include "src/cublas/cublas_wrap.hpp"
 #include "src/welcome.hpp"
 
@@ -89,6 +90,30 @@ TEST(Scalar, FileIO)
   EXPECT_FLOAT_EQ(A(0, 1),   5.07612718e+00f);
   EXPECT_FLOAT_EQ(A(499, 0), 3.28176162e+00f);
   EXPECT_FLOAT_EQ(A(499, 1), 2.99595594e+00f);
+}
+
+TEST(Scalar, Vector)
+{
+  // vector that owns its memory
+  common::Vector<int> v(10);
+  EXPECT_EQ(10, v.size());
+
+  for (int idx = 0; idx < v.size(); ++idx) {
+    v[idx] = idx;
+  }
+
+  auto raw = v.data();
+
+  for (int idx = 0; idx < v.size(); ++idx) {
+    EXPECT_EQ(raw[idx], idx);
+  }
+
+  // vector that does not own its memory
+  common::Vector<int> w(v.data(), 5);
+
+  for (int idx = 0; idx < v.size(); ++ idx) {
+    EXPECT_EQ(v[idx], idx);
+  }
 }
 
 TEST(Scalar, Matrix)
