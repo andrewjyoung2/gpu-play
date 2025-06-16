@@ -51,7 +51,21 @@ public:
     return m_data[n];
   }
 
+  inline const T& operator[](const int n) const
+  {
+    ASSERT(n >= 0);
+    ASSERT(n < size());
+    return m_data[n];
+  }
+
   inline T& operator()(const int x, const int y)
+  {
+    ASSERT(x < m_rows);
+    ASSERT(y < m_cols);
+    return m_data[y + m_cols * x];
+  }
+
+  inline const T& operator()(const int x, const int y) const
   {
     ASSERT(x < m_rows);
     ASSERT(y < m_cols);

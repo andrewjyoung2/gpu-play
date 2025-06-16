@@ -12,6 +12,10 @@
 #include "src/em_alg/posterior.hpp"
 #include "src/welcome.hpp"
 
+//------------------------------------------------------------------------------
+const float eps { 1.0e-7f }; // tolerance for EXPECT_NEAR
+
+//------------------------------------------------------------------------------
 TEST(Example, welcome)
 {
     const std::string msg { "Welcome to LeetGPU!" };
@@ -83,7 +87,7 @@ TEST(Scalar, FileIO)
   EXPECT_TRUE(common::IsDirectory(dirpath));
   EXPECT_TRUE(common::IsFile(filepath));
 
-  common::Matrix<float> A = common::ReadMatrix(filepath);
+  common::Matrix<float> A = common::ReadMatrix<float>(filepath);
   EXPECT_EQ(500, A.rows());
   EXPECT_EQ(2,   A.cols());
 
@@ -151,10 +155,10 @@ TEST(Scalar, Matrix)
 
 TEST(Scalar, Posterior)
 {
-  const auto obs = common::ReadMatrix("../test/data/test1/observations.txt" );
-  const auto m   = common::ReadMatrix("../test/data/test1/initial_mean.txt");
-  const auto cov = common::ReadMatrix("../test/data/test1/initial_covariance.txt");
-  const auto pr  = common::ReadMatrix("../test/data/test1/initial_priors.txt");
+  const auto obs = common::ReadMatrix<float>("../test/data/test1/observations.txt" );
+  const auto m   = common::ReadMatrix<float>("../test/data/test1/initial_mean.txt");
+  const auto cov = common::ReadMatrix<float>("../test/data/test1/initial_covariance.txt");
+  const auto pr  = common::ReadMatrix<float>("../test/data/test1/initial_priors.txt");
 
   const int numObs     = obs.rows();
   const int numClasses = m.rows();
@@ -179,6 +183,13 @@ TEST(Scalar, Posterior)
                         cov.get_row(0), // in:  covariances
                         pr.get_row(0)); // in:  priors
 
-  // TODO: compare outputs to Octave
+  // compare outputs to Octave
+  const auto exp_dens = common::ReadMatrix<float>("../test/data/test1/densities.txt");
+
+  for (int k = 0; k < numObs; ++k) {
+    for (int j = 0; j < numClasses; ++j) {
+      EXPECT_NEAR(dens(k, j), exp_dens(k, j), eps);
+    }
+  }
 }
 

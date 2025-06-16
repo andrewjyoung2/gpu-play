@@ -26,40 +26,5 @@ bool IsFile(const std::string& path)
   return static_cast<bool>(S_ISREG(st.st_mode));
 }
 
-Matrix<float> ReadMatrix(const std::string& path)
-{
-  ASSERT(IsFile(path));
-
-  std::ifstream ifs(path);
-  ASSERT(ifs.is_open());
-
-  int rows { 0 };
-  int cols { 0 };
-
-  std::vector<float> numbers;
-
-  std::string line;
-  while (std::getline(ifs, line)) {
-    ++rows;
-
-    std::stringstream ss(line);
-    float val;
-    cols = 0;
-
-    while (ss >> val) {
-      ++cols;
-      numbers.push_back(val);
-    }
-  }
-
-  ASSERT(numbers.size() <= std::numeric_limits<int>::max());
-  ASSERT(static_cast<size_t>(rows * cols) == numbers.size());
-
-  common::Matrix<float> Mat(rows, cols);
-
-  std::memcpy(Mat.data(), numbers.data(), numbers.size() * sizeof(float));
-  return Mat;
-}
-
 } // namespace common
 

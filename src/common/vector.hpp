@@ -48,6 +48,13 @@ public:
     return m_data[n];
   }
 
+  inline const T& operator[](int n) const
+  {
+    ASSERT(n >= 0);
+    ASSERT(n < m_size);
+    return m_data[n];
+  }
+
 private:
   T*  m_data      { nullptr };
   int m_size      { -1 };
