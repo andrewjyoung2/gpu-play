@@ -90,6 +90,14 @@ TEST(Scalar, FileIO)
   EXPECT_FLOAT_EQ(A(0, 1),   5.07612718e+00f);
   EXPECT_FLOAT_EQ(A(499, 0), 3.28176162e+00f);
   EXPECT_FLOAT_EQ(A(499, 1), 2.99595594e+00f);
+
+  common::Vector<float> v = A.get_row(3);
+
+  EXPECT_EQ(2, v.size());
+  EXPECT_FLOAT_EQ(v[0], 8.79061146e-01f);
+  EXPECT_FLOAT_EQ(v[0], A(3, 0));
+  EXPECT_FLOAT_EQ(v[1], 1.05496685e+00f);
+  EXPECT_FLOAT_EQ(v[1], A(3, 1));
 }
 
 TEST(Scalar, Vector)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/common/assert.hpp"
+#include "src/common/vector.hpp"
 
 namespace common {
 
@@ -43,18 +44,23 @@ public:
     return m_data;
   }
 
-  inline T& operator[](int n)
+  inline T& operator[](const int n)
   {
     ASSERT(n >= 0);
     ASSERT(n < size());
     return m_data[n];
   }
 
-  inline T& operator()(int x, int y)
+  inline T& operator()(const int x, const int y)
   {
     ASSERT(x < m_rows);
     ASSERT(y < m_cols);
     return m_data[y + m_cols * x];
+  }
+
+  Vector<T> get_row(const int r) const
+  {
+    return Vector<T>(m_data + r * m_cols, m_cols);
   }
 
 private:
