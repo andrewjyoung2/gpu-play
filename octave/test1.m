@@ -47,7 +47,6 @@ save('-ascii',[directory,'/error_threshold.txt'],'e_min')
 [p,n]=size(x)
 [J,n]=size(m)
 Pa=Pa_ini;
-clear P;
 density=[];
 denominator=[];
 for k=1:p
@@ -56,10 +55,11 @@ for k=1:p
   P_tot=tmp*Pa';
   denominator=[denominator, P_tot];
   for j=1:J
-    P(j,k)=tmp(j)*Pa(j)/P_tot;
+    posterior(j,k)=tmp(j)*Pa(j)/P_tot;
   end
 end
 
 save('-ascii',[directory,'/densities.txt'],'density')
 save('-ascii',[directory,'/denominators.txt'],'denominator')
+save('-ascii',[directory,'/posteriors.txt'],'posterior')
 

@@ -55,6 +55,15 @@ void Posterior(common::Matrix<float>&       posteriors,
 
     denominators[k] = tmp;
   }
+
+  // Step 3: Calculate matrix of posterior probabilities
+  for (int k = 0; k < numObs; ++k) {
+    const float denom = denominators[k];
+
+    for (int j = 0; j < numClasses; ++j) {
+      posteriors(j, k) = densities(k, j) * priors[j] / denom;
+    }
+  }
 }
 
 } // namspace Scalar
