@@ -13,6 +13,8 @@ target_link_libraries(GTest::GTest INTERFACE gtest_main)
 set(TEST_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.cpp
   ${CMAKE_SOURCE_DIR}/src/common/assert.hpp
+  ${CMAKE_SOURCE_DIR}/src/common/file_io.cpp
+  ${CMAKE_SOURCE_DIR}/src/common/file_io.hpp
   ${CMAKE_SOURCE_DIR}/src/common/math.cu
   ${CMAKE_SOURCE_DIR}/src/common/math.hpp
   ${CMAKE_SOURCE_DIR}/src/common/matrix.hpp
@@ -22,8 +24,8 @@ set(TEST_FILES
   ${CMAKE_SOURCE_DIR}/src/common/vector.hpp
   ${CMAKE_SOURCE_DIR}/src/cublas/cublas_wrap.cu
   ${CMAKE_SOURCE_DIR}/src/cublas/cublas_wrap.hpp
-  ${CMAKE_SOURCE_DIR}/src/common/file_io.hpp
-  ${CMAKE_SOURCE_DIR}/src/common/file_io.cpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/posterior.cpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/posterior.hpp
   ${CMAKE_SOURCE_DIR}/src/welcome.cu
   ${CMAKE_SOURCE_DIR}/src/welcome.hpp
 )

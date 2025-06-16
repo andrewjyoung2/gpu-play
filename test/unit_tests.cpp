@@ -9,6 +9,7 @@
 #include "src/common/scalar.hpp"
 #include "src/common/vector.hpp"
 #include "src/cublas/cublas_wrap.hpp"
+#include "src/em_alg/posterior.hpp"
 #include "src/welcome.hpp"
 
 TEST(Example, welcome)
@@ -146,5 +147,38 @@ TEST(Scalar, Matrix)
   EXPECT_EQ(A[3], A(1, 0));
   EXPECT_EQ(A[4], A(1, 1));
   EXPECT_EQ(A[5], A(1, 2));
+}
+
+TEST(Scalar, Posterior)
+{
+  const auto obs = common::ReadMatrix("../test/data/test1/observations.txt" );
+  const auto m   = common::ReadMatrix("../test/data/test1/initial_mean.txt");
+  const auto cov = common::ReadMatrix("../test/data/test1/initial_covariance.txt");
+  const auto pr  = common::ReadMatrix("../test/data/test1/initial_priors.txt");
+
+  const int numObs     = obs.rows();
+  const int numClasses = m.rows();
+  EXPECT_EQ(2, obs.cols());
+  EXPECT_EQ(2, m.cols());
+
+  EXPECT_EQ(1,          cov.rows());
+  EXPECT_EQ(numClasses, cov.cols());
+
+  EXPECT_EQ(1,          pr.rows());
+  EXPECT_EQ(numClasses, pr.cols());
+
+  common::Matrix<float> post(numClasses, numObs);
+  common::Matrix<float> dens(numObs, numClasses);
+  common::Vector<float> denom(numObs);
+
+  EM::Scalar::Posterior(post,           // out: posteriors
+                        dens,           // out: densities
+                        denom,          // out: denominators
+                        obs,            // in:  observations
+                        m,              // in:  means
+                        cov.get_row(0), // in:  covariances
+                        pr.get_row(0)); // in:  priors
+
+  // TODO: compare outputs to Octave
 }
 
