@@ -42,7 +42,6 @@ Matrix<T> ReadMatrix(const std::string& path)
     }
   }
 
-  ASSERT(numbers.size() <= std::numeric_limits<int>::max());
   ASSERT(static_cast<size_t>(rows * cols) == numbers.size());
 
   common::Matrix<T> Mat(rows, cols);

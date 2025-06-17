@@ -15,12 +15,12 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
                             const common::Vector<float>& priors)
 {
   const int numObs     = observations.rows();
-  const int dim        = observations.cols();
+  const int dimension  = observations.cols();
   const int numClasses = means.rows();
 
-  ASSERT(dim == 2); // limit of the current implementation
+  ASSERT(dimension == 2); // limit of the current implementation
 
-  ASSERT(means.cols()        == dim);
+  ASSERT(means.cols()        == dimension);
   ASSERT(covariances.size()  == numClasses);
   ASSERT(priors.size()       == numClasses);
   ASSERT(posteriors.rows()   == numClasses);
@@ -54,10 +54,48 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
              priors.size() * sizeof(float)));
 
   // Transfer data from host to device
+  CUDA_CHECK(cudaMemcpy(d_observations,
+                        observations.data(),
+                        observations.size() * sizeof(float),
+                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(d_means,
+                        means.data(),
+                        means.size() * sizeof(float),
+                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(d_covariances,
+                        covariances.data(),
+                        covariances.size() * sizeof(float),
+                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(d_priors,
+                        priors.data(),
+                        priors.size() * sizeof(float),
+                        cudaMemcpyHostToDevice));
 
   // Run the calculation
+  PosteriorDevice(d_posteriors,
+                  d_densities,
+                  d_denominators,
+                  d_observations,
+                  d_means,
+                  d_covariances,
+                  d_priors,
+                  dimension,
+                  numClasses,
+                  numObs);
 
   // Transfer results from device to host
+  CUDA_CHECK(cudaMemcpy(posteriors.data(),
+                        d_posteriors,
+                        posteriors.size() * sizeof(float),
+                        cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaMemcpy(densities.data(),
+                        d_densities,
+                        densities.size() * sizeof(float),
+                        cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaMemcpy(denominators.data(),
+                        d_denominators,
+                        denominators.size() * sizeof(float),
+                        cudaMemcpyDeviceToHost));
 
   // Cleanup
   CUDA_CHECK(cudaFree(d_posteriors));
@@ -83,6 +121,15 @@ __host__ void PosteriorDevice(float*    d_posteriors,
                               const int numClasses,
                               const int numObs)
 {
+  ASSERT(nullptr != d_posteriors);
+  ASSERT(nullptr != d_densities);
+  ASSERT(nullptr != d_denominators);
+  ASSERT(nullptr != d_observations);
+  ASSERT(nullptr != d_means);
+  ASSERT(nullptr != d_covariances);
+  ASSERT(nullptr != d_priors);
+
+  // Run kernel
 }
 
 } // namespace CUDA
