@@ -3,7 +3,27 @@
 namespace EM { namespace CUDA {
 
 //------------------------------------------------------------------------------
-// TODO: write kernel
+__global__ void PosteriorKernel(float*    d_posteriors,
+                                float*    d_densities,
+                                float*    d_denominators,
+                                float*    d_observations,
+                                float*    d_means,
+                                float*    d_covariances,
+                                float*    d_priors,
+                                const int dimension,
+                                const int numClasses,
+                                const int numObs)
+{
+  // Sanity check - copy observations to densities
+  const int idx = threadIdx.x
+                + threadIdx.y * blockDim.x
+                + blockIdx.x  * blockDim.x * blockDim.y;
+  const int matrixSize = numObs * numClasses;
+
+  if (idx < matrixSize) {
+    d_densities[idx] = d_posteriors[idx];
+  }
+}
 
 //------------------------------------------------------------------------------
 __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
@@ -130,6 +150,23 @@ __host__ void PosteriorDevice(float*    d_posteriors,
   ASSERT(nullptr != d_priors);
 
   // Run kernel
+  const int xDim = numClasses;
+  const int yDim = 256;
+  ASSERT(xDim * yDim < 1024);
+
+  const dim3 threadsPerBlock(xDim, yDim);
+  const int  numBlocks = numClasses * numObs / (xDim * yDim);
+
+  PosteriorKernel<<<numBlocks, threadsPerBlock>>>(d_posteriors,
+                                                  d_densities,
+                                                  d_denominators,
+                                                  d_observations,
+                                                  d_means,
+                                                  d_covariances,
+                                                  d_priors,
+                                                  dimension,
+                                                  numClasses,
+                                                  numObs);
 }
 
 } // namespace CUDA
