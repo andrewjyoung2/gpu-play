@@ -167,6 +167,7 @@ __host__ void PosteriorDevice(float*    d_posteriors,
                                                   dimension,
                                                   numClasses,
                                                   numObs);
+  cudaDeviceSynchronize();
 }
 
 } // namespace CUDA

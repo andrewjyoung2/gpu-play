@@ -243,10 +243,8 @@ TEST(CUDA, Posterior)
 
   // Placeholder - I copied the data from observations to densities
   // for a sanity check
-  for (int k = 0; k < numObs; ++k) {
-    for (int j = 0; j < numClasses; ++j) {
-      EXPECT_FLOAT_EQ(dens(k, j), obs(k, j));
-    }
+  for (int idx = 0; idx < obs.size(); ++idx) {
+    EXPECT_FLOAT_EQ(dens[idx], obs[idx]);
   }
 }
 
