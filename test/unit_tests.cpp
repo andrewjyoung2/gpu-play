@@ -240,5 +240,13 @@ TEST(CUDA, Posterior)
                           m,              // in:  means
                           cov.get_row(0), // in:  covariances
                           pr.get_row(0)); // in:  priors
+
+  // Placeholder - I copied the data from observations to densities
+  // for a sanity check
+  for (int k = 0; k < numObs; ++k) {
+    for (int j = 0; j < numClasses; ++j) {
+      EXPECT_FLOAT_EQ(dens(k, j), obs(k, j));
+    }
+  }
 }
 
