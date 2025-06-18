@@ -53,10 +53,6 @@ Matrix<T> ReadMatrix(const std::string& path)
 template<typename T>
 void WriteMatrix(const std::string& filename, const Matrix<T>& Mat)
 {
-  // file should not exist yet
-  ASSERT(!IsFile(filename));
-  ASSERT(!IsDirectory(filename));
-
   std::ofstream ofs(filename);
   ASSERT(ofs.is_open());
 

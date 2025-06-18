@@ -151,8 +151,8 @@ __host__ void PosteriorDevice(float*    d_posteriors,
 
   // Run kernel
   const int xDim = numClasses;
-  const int yDim = 256;
-  ASSERT(xDim * yDim < 1024);
+  const int yDim = 32;
+  ASSERT(xDim * yDim < 256);
 
   const dim3 threadsPerBlock(xDim, yDim);
   const int  numBlocks = numClasses * numObs / (xDim * yDim);
