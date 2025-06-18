@@ -14,34 +14,57 @@ __global__ void PosteriorKernel(float*    d_posteriors,
                                 const int numClasses,
                                 const int numObs)
 {
-  // class ID is threadIdx.x
-  // observation ID is threadIdx.y modulo block size
+  // Step 1: Calculate matrix of Gaussian densities
+  // dens(k, j) = j-th Gaussian evaluated at k-th observation
+  {
+    // class ID is threadIdx.x
+    // observation ID is threadIdx.y modulo block size
 
-  // size of density matrix
-  const int numWrites = numObs * numClasses;
-  // offset for entry (k, j) of density matrix
-  const int writeIdx  = threadIdx.x
-                      + threadIdx.y * blockDim.x
-                      + blockIdx.x  * blockDim.x * blockDim.y;
+    // size of density matrix
+    const int numWrites = numObs * numClasses;
+    // offset for entry (k, j) of density matrix
+    const int writeIdx  = threadIdx.x
+                        + threadIdx.y * blockDim.x
+                        + blockIdx.x  * blockDim.x * blockDim.y;
 
-  if (writeIdx < numWrites) {
-    // Step 1: Calculate matrix of Gaussian densities
-    // dens(k, j) = j-th Gaussian evaluated at k-th observation
+    if (writeIdx < numWrites) {
 
-    // point to entry (k, j) of density matrix
-    float * writePtr = d_densities + writeIdx;
-    // point to k-th row of observation matrix
-    float* x = d_observations
-             + threadIdx.y * dimension
-             + blockIdx.x  * dimension * blockDim.y;
-    // point to j-th row of means matrix
-    float* m = d_means
-             + threadIdx.x * dimension;
+      // point to k-th row of observation matrix
+      float* x = d_observations
+               + threadIdx.y * dimension
+               + blockIdx.x  * dimension * blockDim.y;
+      // point to j-th row of means matrix
+      float* m = d_means
+               + threadIdx.x * dimension;
 
-    const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
-    const float s           = d_covariances[threadIdx.x];
-    const float c           = 1 / (2 * M_PI * s);
-    *writePtr               = c * exp(-normSquared / (2 * s));
+      const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
+      const float s           = d_covariances[threadIdx.x];
+      const float c           = 1 / (2 * M_PI * s);
+      d_densities[writeIdx]   = c * exp(-normSquared / (2 * s));
+    }
+  }
+
+  __syncthreads();
+
+  // Step 2: Caclulate the vector of denominators
+  // denom(k) = sum_j dens(k,j) * prior(j)
+  {
+    const int numWrites = numObs;
+    const int writeIdx  = threadIdx.y + blockIdx.x * blockDim.y;
+
+    if (writeIdx < numWrites) {
+      // point to k-th row of density matrix
+      float* x = d_densities
+               + threadIdx.y * blockDim.x
+               + blockIdx.x  * blockDim.x * blockDim.y;
+      // dot product
+      float tmp { 0 };
+      for (int j = 0; j < numClasses; ++j) {
+        tmp += x[j] * d_priors[j];
+      }
+
+      d_denominators[writeIdx] = tmp;
+    }
   }
 }
 
