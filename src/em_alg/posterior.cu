@@ -15,10 +15,14 @@ __global__ void PosteriorKernel(float*    d_posteriors,
                                 const int numObs)
 {
   // Sanity check - copy observations to densities
+#if 0
   const int idx = threadIdx.x
                 + threadIdx.y * blockDim.x
                 + blockIdx.x  * blockDim.x * blockDim.y;
-  const int matrixSize = numObs * numClasses;
+#else
+  const int idx = threadIdx.x + blockDim.x * blockIdx.x;
+#endif
+  const int matrixSize = numObs * 2;
 
   if (idx < matrixSize) {
     d_densities[idx] = d_posteriors[idx];
@@ -156,7 +160,7 @@ __host__ void PosteriorDevice(float*    d_posteriors,
 
   const dim3 threadsPerBlock(xDim, yDim);
   const int  numBlocks = numClasses * numObs / (xDim * yDim);
-
+#if 0
   PosteriorKernel<<<numBlocks, threadsPerBlock>>>(d_posteriors,
                                                   d_densities,
                                                   d_denominators,
@@ -167,6 +171,18 @@ __host__ void PosteriorDevice(float*    d_posteriors,
                                                   dimension,
                                                   numClasses,
                                                   numObs);
+#else
+  PosteriorKernel<<<2, 256>>>(d_posteriors,
+                                                  d_densities,
+                                                  d_denominators,
+                                                  d_observations,
+                                                  d_means,
+                                                  d_covariances,
+                                                  d_priors,
+                                                  dimension,
+                                                  numClasses,
+                                                  numObs);
+#endif
   cudaDeviceSynchronize();
 }
 
