@@ -296,5 +296,8 @@ TEST(CUDA, Posterior)
       EXPECT_NEAR(post(j, k), exp_post(j, k), eps);
     }
   }
+
+  std::cout << "Dump posterior matrix to text file" << std::endl;
+  common::WriteMatrix<float>("../test/data/test1/posteriors.txt", post);
 }
 
