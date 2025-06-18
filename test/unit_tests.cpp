@@ -278,9 +278,5 @@ TEST(CUDA, Posterior)
       EXPECT_NEAR(dens(k, j), exp_dens(k, j), eps);
     }
   }
-
-  const std::string debugfile { "../test/data/test1/debug_dens.txt" };
-  std::cout << "Dumping dens to file " << debugfile << std::endl;
-  common::WriteMatrix<float>(debugfile, dens);
 }
 
