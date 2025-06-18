@@ -278,5 +278,6 @@ TEST(CUDA, Posterior)
 
   const std::string debugfile { "../test/data/test1/debug_dens.txt" };
   std::cout << "Dumping dens to file " << debugfile << std::endl;
+  common::WriteMatrix<float>(debugfile, dens);
 }
 
