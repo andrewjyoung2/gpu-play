@@ -298,6 +298,6 @@ TEST(CUDA, Posterior)
   }
 
   std::cout << "Dump posterior matrix to text file" << std::endl;
-  common::WriteMatrix<float>("../test/data/test1/posteriors.txt", post);
+  common::WriteMatrix<float>("../test/data/test1/debug_post.txt", post);
 }
 
