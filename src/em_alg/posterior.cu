@@ -77,14 +77,13 @@ __global__ void PosteriorKernel(float*    d_posteriors,
     const int densIdx  = threadIdx.x
                        + threadIdx.y * blockDim.x
                        + blockIdx.x  * blockDim.x * blockDim.y;
+    const int obsIdx   = threadIdx.y + blockIdx.x * blockDim.y;
 
-    if (densIdx < numWrites) {
+    if ((obsIdx < numObs) && (densIdx < numWrites)) {
       // k-th denominator
-      float denom = d_denominators[threadIdx.y + blockIdx.x * blockDim.y];
+      float denom = d_denominators[obsIdx];
       // offset for entry (j, k) of posterior matrix
-      const int postIdx = threadIdx.x * numObs
-                        + blockIdx.x  * blockDim.y
-                        + threadIdx.x;
+      const int postIdx = threadIdx.x * numObs + obsIdx;
 
       d_posteriors[postIdx] = d_densities[densIdx] * d_priors[threadIdx.x] / denom;
     }
