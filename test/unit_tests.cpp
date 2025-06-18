@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstring>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -77,7 +78,7 @@ TEST(cuBLAS, Ddot)
   EXPECT_FLOAT_EQ(res, 60.0);
 }
 
-TEST(Scalar, FileIO)
+TEST(Scalar, FileRead)
 {
   const std::string dirpath {
     "../test/data/test1"
@@ -103,6 +104,34 @@ TEST(Scalar, FileIO)
   EXPECT_FLOAT_EQ(v[0], A(3, 0));
   EXPECT_FLOAT_EQ(v[1], 1.05496685e+00f);
   EXPECT_FLOAT_EQ(v[1], A(3, 1));
+}
+
+TEST(Scalar, FileWrite)
+{
+  const int nrows { 10 };
+  const int ncols { 5 };
+
+  common::Matrix<int> A(nrows, ncols);
+  for (int i = 0; i < nrows; ++i) {
+    for (int j = 0; j < ncols; ++j) {
+      A(i, j) = i + j;
+    }
+  }
+
+  // TODO: use mkstmp instead of tmpnam
+  const std::string filename = std::tmpnam(nullptr);
+
+  common::WriteMatrix(filename, A);
+
+  const auto B = common::ReadMatrix<int>(filename);
+
+  for (int i = 0; i < nrows; ++i) {
+    for (int j = 0; j < ncols; ++j) {
+      A(i, j) = B(i, j);
+    }
+  }
+
+  std::remove(filename.c_str());
 }
 
 TEST(Scalar, Vector)
@@ -246,5 +275,8 @@ TEST(CUDA, Posterior)
   for (int idx = 0; idx < obs.size(); ++idx) {
     EXPECT_FLOAT_EQ(dens[idx], obs[idx]);
   }
+
+  const std::string debugfile { "../test/data/test1/debug_dens.txt" };
+  std::cout << "Dumping dens to file " << debugfile << std::endl;
 }
 

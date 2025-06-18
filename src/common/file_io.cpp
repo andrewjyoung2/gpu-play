@@ -16,7 +16,7 @@ bool IsDirectory(const std::string& path)
 {
   struct stat stats;
   stat(path.c_str(), &stats);
-  return S_ISDIR(stats.st_mode) ? true : false;
+  return static_cast<bool>(S_ISDIR(stats.st_mode));
 }
 
 bool IsFile(const std::string& path)

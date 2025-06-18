@@ -50,5 +50,22 @@ Matrix<T> ReadMatrix(const std::string& path)
   return Mat;
 }
 
+template<typename T>
+void WriteMatrix(const std::string& filename, const Matrix<T>& Mat)
+{
+  // file should not exist yet
+  ASSERT(!IsFile(filename));
+  ASSERT(!IsDirectory(filename));
+
+  std::ofstream ofs(filename);
+  ASSERT(ofs.is_open());
+
+  for (int i = 0; i < Mat.rows(); ++i) {
+    for (int j = 0; j < Mat.cols(); ++j) {
+      ofs << Mat(i, j) << ' ';
+    }
+    ofs << std::endl;
+  }
+}
 } // namespace common
 
