@@ -36,8 +36,7 @@ __global__ void PosteriorKernel(float*    d_posteriors,
              + blockIdx.x  * dimension * blockDim.y;
     // point to j-th row of means matrix
     float* m = d_means
-             + threadIdx.x * dimension
-             + blockIdx.x  * dimension * blockIdx.x;
+             + threadIdx.x * dimension;
 
     const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
     const float s           = d_covariances[threadIdx.x];
