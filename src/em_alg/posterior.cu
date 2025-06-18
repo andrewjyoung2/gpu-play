@@ -14,14 +14,35 @@ __global__ void PosteriorKernel(float*    d_posteriors,
                                 const int numClasses,
                                 const int numObs)
 {
-  // Sanity check - copy observations to densities
-  const int idx = threadIdx.x
-                + threadIdx.y * blockDim.x
-                + blockIdx.x  * blockDim.x * blockDim.y;
-  const int matrixSize = numObs * dimension;
+  // class ID is threadIdx.x
+  // observation ID is threadIdx.y modulo block size
 
-  if (idx < matrixSize) {
-    d_densities[idx] = d_observations[idx];
+  // size of density matrix
+  const int numWrites = numObs * numClasses;
+  // offset for entry (k, j) of density matrix
+  const int writeIdx  = threadIdx.x
+                      + threadIdx.y * blockDim.x
+                      + blockIdx.x  * blockDim.x * blockDim.y;
+
+  if (writeIdx < numWrites) {
+    // Step 1: Calculate matrix of Gaussian densities
+    // dens(k, j) = j-th Gaussian evaluated at k-th observation
+
+    // point to entry (k, j) of density matrix
+    float * writePtr = d_densities + writeIdx;
+    // point to k-th row of observation matrix
+    float* x = d_observations
+             + threadIdx.y * dimension
+             + blockIdx.x  * dimension * blockDim.y;
+    // point to j-th row of means matrix
+    float* m = d_means
+             + threadIdx.x * dimension
+             + blockIdx.x  * dimension * blockIdx.x;
+
+    const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
+    const float s           = d_covariances[threadIdx.x];
+    const float c           = 1 / (2 * M_PI * s);
+    *writePtr               = c * exp(-normSquared / (2 * s));
   }
 }
 
