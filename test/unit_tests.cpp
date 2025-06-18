@@ -270,10 +270,13 @@ TEST(CUDA, Posterior)
                           cov.get_row(0), // in:  covariances
                           pr.get_row(0)); // in:  priors
 
-  // Placeholder - I copied the data from observations to densities
-  // for a sanity check
-  for (int idx = 0; idx < obs.size(); ++idx) {
-    EXPECT_FLOAT_EQ(dens[idx], obs[idx]);
+  // compare outputs to Octave
+  const auto exp_dens = common::ReadMatrix<float>("../test/data/test1/densities.txt");
+
+  for (int k = 0; k < numObs; ++k) {
+    for (int j = 0; j < numClasses; ++j) {
+      EXPECT_NEAR(dens(k, j), exp_dens(k, j), eps);
+    }
   }
 
   const std::string debugfile { "../test/data/test1/debug_dens.txt" };
