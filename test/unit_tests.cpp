@@ -286,5 +286,15 @@ TEST(CUDA, Posterior)
   for (int k = 0; k < numObs; ++k) {
     EXPECT_NEAR(denom[k], exp_denom(0, k), eps);
   }
+
+  const auto exp_post = common::ReadMatrix<float>("../test/data/test1/posteriors.txt");
+  EXPECT_EQ(exp_post.rows(), 3);
+  EXPECT_EQ(exp_post.cols(), 500);
+
+  for (int j = 0; j < numClasses; ++j) {
+    for (int k = 0; k < numObs; ++k) {
+      EXPECT_NEAR(post(j, k), exp_post(j, k), eps);
+    }
+  }
 }
 

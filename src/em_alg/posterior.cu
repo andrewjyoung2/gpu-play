@@ -66,6 +66,29 @@ __global__ void PosteriorKernel(float*    d_posteriors,
       d_denominators[writeIdx] = tmp;
     }
   }
+
+  __syncthreads();
+
+  // Step 3: Calculate matrix of posterior probabilities
+  {
+    // size of posterior matrix = size of density matrix
+    const int numWrites = numObs * numClasses;
+    // offset for entry (k, j) of density matrix
+    const int densIdx  = threadIdx.x
+                       + threadIdx.y * blockDim.x
+                       + blockIdx.x  * blockDim.x * blockDim.y;
+
+    if (densIdx < numWrites) {
+      // k-th denominator
+      float denom = d_denominators[threadIdx.y + blockIdx.x * blockDim.y];
+      // offset for entry (j, k) of posterior matrix
+      const int postIdx = threadIdx.x * numObs
+                        + blockIdx.x  * blockDim.y
+                        + threadIdx.x;
+
+      d_posteriors[postIdx] = d_densities[densIdx] * d_priors[threadIdx.x] / denom;
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -194,7 +217,7 @@ __host__ void PosteriorDevice(float*    d_posteriors,
 
   // Run kernel
   const int xDim = numClasses;
-  const int yDim = 32;
+  const int yDim = 64;
   ASSERT(xDim * yDim < 256);
 
   const dim3 threadsPerBlock(xDim, yDim);
