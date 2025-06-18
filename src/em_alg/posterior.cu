@@ -175,7 +175,9 @@ __host__ void PosteriorDevice(float*    d_posteriors,
   ASSERT(xDim * yDim < 256);
 
   const dim3 threadsPerBlock(xDim, yDim);
-  const int  numBlocks = numClasses * numObs / (xDim * yDim);
+
+  // Round Up: ceil((numClasses * numObs) / (xDim * yDim))
+  const int  numBlocks = (numClasses * numObs + xDim * yDim - 1) / (xDim * yDim);
 
   PosteriorKernel<<<numBlocks, threadsPerBlock>>>(d_posteriors,
                                                   d_densities,
