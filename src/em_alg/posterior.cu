@@ -73,18 +73,15 @@ __global__ void PosteriorKernel(float*    d_posteriors,
   {
     // size of posterior matrix = size of density matrix
     const int numWrites = numObs * numClasses;
+    // offset for k-th entry of denominator vector
+    const int obsIdx  = threadIdx.y + blockIdx.x * blockDim.y;
     // offset for entry (k, j) of density matrix
-    const int densIdx  = threadIdx.x
-                       + threadIdx.y * blockDim.x
-                       + blockIdx.x  * blockDim.x * blockDim.y;
-    const int obsIdx   = threadIdx.y + blockIdx.x * blockDim.y;
+    const int densIdx = threadIdx.x + obsIdx * blockDim.x;
+    // offset for entry (j, k) of posterior matrix
+    const int postIdx = threadIdx.x * numObs + obsIdx;
 
     if ((obsIdx < numObs) && (densIdx < numWrites)) {
-      // k-th denominator
       float denom = d_denominators[obsIdx];
-      // offset for entry (j, k) of posterior matrix
-      const int postIdx = threadIdx.x * numObs + obsIdx;
-
       d_posteriors[postIdx] = d_densities[densIdx] * d_priors[threadIdx.x] / denom;
     }
   }
