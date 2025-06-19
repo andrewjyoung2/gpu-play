@@ -11,6 +11,7 @@
 #include "src/common/scalar.hpp"
 #include "src/common/vector.hpp"
 #include "src/cublas/cublas_wrap.hpp"
+#include "src/em_alg/covar_est.hpp"
 #include "src/em_alg/posterior.hpp"
 #include "src/em_alg/mean_est.hpp"
 #include "src/welcome.hpp"
@@ -361,6 +362,49 @@ TEST(CUDA, MeanEst)
     for (int n = 0; n < dimension; ++n) {
       EXPECT_NEAR(mean(j, n), exp_mean(j, n), eps);
     }
+  }
+}
+
+TEST(Scalar, CovarEst)
+{
+  const auto post
+    = common::ReadMatrix<float>("../test/data/test1/posteriors.txt");
+  const auto obs
+    = common::ReadMatrix<float>("../test/data/test1/observations.txt");
+  const auto mean_est
+    = common::ReadMatrix<float>("../test/data/test1/updated_mean.txt");
+
+  const int numClasses = post.rows();
+  const int numObs     = post.cols();
+  const int dim        = obs.cols();
+
+  EXPECT_EQ(dim, 2);
+  EXPECT_EQ(obs.rows(), numObs);
+  EXPECT_EQ(mean_est.rows(), numClasses);
+  EXPECT_EQ(mean_est.cols(), dim);
+
+  common::Vector<float> covar_est(numClasses);
+
+  const auto start = std::chrono::high_resolution_clock::now();
+
+  EM::Scalar::CovarEst(covar_est,
+                       mean_est,
+                       post,
+                       obs);
+
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration
+    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute EM::Scalar::CovarEst = " << duration.count()
+            << " microseconds"                           << std::endl;
+
+  const auto exp_covar
+    = common::ReadMatrix<float>("../test/data/test1/updated_covar.txt" );
+  EXPECT_EQ(exp_covar.rows(), 1);
+  EXPECT_EQ(exp_covar.cols(), numClasses);
+
+  for (int j = 0; j < numClasses; ++j) {
+    EXPECT_NEAR(exp_covar(0, j), covar_est[j], eps);
   }
 }
 
