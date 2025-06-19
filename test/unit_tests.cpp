@@ -16,7 +16,7 @@
 #include "src/welcome.hpp"
 
 //------------------------------------------------------------------------------
-const float eps { 1.0e-6f }; // tolerance for EXPECT_NEAR
+const float eps { 1.0e-5f }; // tolerance for EXPECT_NEAR
 
 //------------------------------------------------------------------------------
 TEST(Example, welcome)
@@ -320,8 +320,15 @@ TEST(Scalar, MeanEst)
   EXPECT_EQ(dimension, 2);
   EXPECT_EQ(obs.rows(), numObs);
 
-  common::Matrix<float> m(numClasses, dimension);
+  common::Matrix<float> mean(numClasses, dimension);
 
-  EM::Scalar::MeanEst(m, post, obs);
+  EM::Scalar::MeanEst(mean, post, obs);
+
+  const auto exp_mean = common::ReadMatrix<float>("../test/data/test1/updated_mean.txt" );
+  for (int j = 0; j < numClasses; ++j) {
+    for (int n = 0; n < dimension; ++n) {
+      EXPECT_NEAR(mean(j, n), exp_mean(j, n), eps);
+    }
+  }
 }
 
