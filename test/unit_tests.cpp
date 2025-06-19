@@ -354,7 +354,5 @@ TEST(CUDA, MeanEst)
       EXPECT_NEAR(mean(j, n), exp_mean(j, n), eps);
     }
   }
-
-  common::WriteMatrix<float>("../test/data/test1/debug_mean_est.txt", mean);
 }
 

@@ -12,8 +12,8 @@ __global__ void MeanEstKernel(float*    d_means,
                               const int numClasses,
                               const int numObs)
 {
-  const int j = threadIdx.x; // column index, coordinate index
-  const int n = threadIdx.y; // row index, class index
+  const int j = threadIdx.x; // row index, class index
+  const int n = threadIdx.y; // column index, coordinate index
 
   // denominator = sum_k posterior(j, k)
   // numerator   = sum_k posterior(j, k) * obs(k, n)
@@ -42,10 +42,6 @@ __host__ void MeanEstHost(common::Matrix<float>&       means,
   ASSERT(posteriors.rows()   == numClasses);
   ASSERT(observations.rows() == numObs);
   ASSERT(observations.cols() == dimension);
-
-  // TODO: remove
-  ASSERT(numClasses == 3);
-  ASSERT(numObs     == 500);
 
   // Allocate device memory
   float* d_means        { nullptr };
