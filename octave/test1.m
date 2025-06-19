@@ -44,8 +44,8 @@ save('-ascii',[directory,'/initial_priors.txt'],'Pa_ini')
 save('-ascii',[directory,'/error_threshold.txt'],'e_min')
 
 % Evaluate Gaussian at observations
-[p,n]=size(x)
-[J,n]=size(m)
+[p,n]=size(x);
+[J,n]=size(m);
 Pa=Pa_ini;
 density=[];
 denominator=[];
@@ -62,4 +62,27 @@ end
 save('-ascii',[directory,'/densities.txt'],'density')
 save('-ascii',[directory,'/denominators.txt'],'denominator')
 save('-ascii',[directory,'/posteriors.txt'],'posterior')
+
+% Log likelihood
+s=s_ini;
+P=posterior;
+Q_tot=[];
+Q=0;
+for k=1:p
+    for j=1:J
+        Q=Q+P(j,k)*(-(n/2)*log(2*pi*s(j)) - sum( (x(k,:)-m(j,:)).^2)/(2*s(j)) + log(Pa(j)) );
+    end
+end
+Q_tot=[Q_tot Q]
+
+% Update the means
+for j=1:J
+    a=zeros(1,n);
+    for k=1:p
+        a=a+P(j,k)*x(k,:);
+    end
+    m(j,:)=a/sum(P(j,:));
+end
+
+save('-ascii',[directory,'/updated_mean.txt'],'m')
 
