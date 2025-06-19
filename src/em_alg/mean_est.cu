@@ -1,3 +1,4 @@
+#include <chrono>
 #include "src/common/assert.hpp"
 #include "src/em_alg/mean_est.hpp"
 
@@ -44,12 +45,20 @@ __host__ void MeanEstHost(common::Matrix<float>&       means,
                         cudaMemcpyHostToDevice));
 
   // Run the calculation
+  const auto start = std::chrono::high_resolution_clock::now();
+
   MeanEstDevice(d_means,
                 d_posteriors,
                 d_observations,
                 dimension,
                 numClasses,
                 numObs);
+
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration
+    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute EM::CUDA::MeanEstDevice = " << duration.count()
+            << " microseconds"                              << std::endl;
 
   // Transfer results from device to host
   CUDA_CHECK(cudaMemcpy(means.data(),

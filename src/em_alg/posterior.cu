@@ -1,3 +1,4 @@
+#include <chrono>
 #include "src/common/assert.hpp"
 #include "src/em_alg/posterior.hpp"
 
@@ -152,6 +153,8 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
                         cudaMemcpyHostToDevice));
 
   // Run the calculation
+  const auto start = std::chrono::high_resolution_clock::now();
+
   PosteriorDevice(d_posteriors,
                   d_densities,
                   d_denominators,
@@ -162,6 +165,14 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
                   dimension,
                   numClasses,
                   numObs);
+
+  cudaDeviceSynchronize();
+
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration
+    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute EM::CUDA::PosteriorDevice = " << duration.count()
+            << " microseconds"                          << std::endl;
 
   // Transfer results from device to host
   CUDA_CHECK(cudaMemcpy(posteriors.data(),
