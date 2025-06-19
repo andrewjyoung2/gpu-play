@@ -1,3 +1,4 @@
+#include "src/common/assert.hpp"
 #include "src/em_alg/posterior.hpp"
 
 namespace EM { namespace CUDA {

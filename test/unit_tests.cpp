@@ -332,3 +332,28 @@ TEST(Scalar, MeanEst)
   }
 }
 
+TEST(CUDA, MeanEst)
+{
+  const auto post = common::ReadMatrix<float>("../test/data/test1/posteriors.txt");
+  const auto obs  = common::ReadMatrix<float>("../test/data/test1/observations.txt" );
+
+  const int numClasses = post.rows();
+  const int numObs     = post.cols();
+  const int dimension  = obs.cols();
+
+  EXPECT_EQ(dimension, 2);
+  EXPECT_EQ(obs.rows(), numObs);
+
+  common::Matrix<float> mean(numClasses, dimension);
+
+  EM::CUDA::MeanEstHost(mean, post, obs);
+#if 0
+  const auto exp_mean = common::ReadMatrix<float>("../test/data/test1/updated_mean.txt" );
+  for (int j = 0; j < numClasses; ++j) {
+    for (int n = 0; n < dimension; ++n) {
+      EXPECT_NEAR(mean(j, n), exp_mean(j, n), eps);
+    }
+  }
+#endif
+}
+
