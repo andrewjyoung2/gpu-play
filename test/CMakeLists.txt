@@ -27,6 +27,8 @@ set(TEST_FILES
   ${CMAKE_SOURCE_DIR}/src/em_alg/posterior.cpp
   ${CMAKE_SOURCE_DIR}/src/em_alg/posterior.cu
   ${CMAKE_SOURCE_DIR}/src/em_alg/posterior.hpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/mean_est.cpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/mean_est.hpp
   ${CMAKE_SOURCE_DIR}/src/welcome.cu
   ${CMAKE_SOURCE_DIR}/src/welcome.hpp
 )

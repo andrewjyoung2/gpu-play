@@ -30,12 +30,9 @@ __global__ void PosteriorKernel(float*    d_posteriors,
     if (writeIdx < numWrites) {
 
       // point to k-th row of observation matrix
-      float* x = d_observations
-               + threadIdx.y * dimension
-               + blockIdx.x  * dimension * blockDim.y;
+      float* x = d_observations + dimension * (threadIdx.y + blockIdx.x * blockDim.y);
       // point to j-th row of means matrix
-      float* m = d_means
-               + threadIdx.x * dimension;
+      float* m = d_means + threadIdx.x * dimension;
 
       const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
       const float s           = d_covariances[threadIdx.x];

@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <gmock/gmock.h>
@@ -11,6 +12,7 @@
 #include "src/common/vector.hpp"
 #include "src/cublas/cublas_wrap.hpp"
 #include "src/em_alg/posterior.hpp"
+#include "src/em_alg/mean_est.hpp"
 #include "src/welcome.hpp"
 
 //------------------------------------------------------------------------------
@@ -204,6 +206,8 @@ TEST(Scalar, Posterior)
   common::Matrix<float> dens(numObs, numClasses);
   common::Vector<float> denom(numObs);
 
+  const auto start = std::chrono::high_resolution_clock::now();
+
   EM::Scalar::Posterior(post,           // out: posteriors
                         dens,           // out: densities
                         denom,          // out: denominators
@@ -211,6 +215,12 @@ TEST(Scalar, Posterior)
                         m,              // in:  means
                         cov.get_row(0), // in:  covariances
                         pr.get_row(0)); // in:  priors
+
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration
+    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute EM::Scalar::Posterior = " << duration.count()
+            << " microseconds"                            << std::endl;
 
   // compare outputs to Octave
   const auto exp_dens = common::ReadMatrix<float>("../test/data/test1/densities.txt");
@@ -296,5 +306,22 @@ TEST(CUDA, Posterior)
       EXPECT_NEAR(post(j, k), exp_post(j, k), eps);
     }
   }
+}
+
+TEST(Scalar, MeanEst)
+{
+  const auto post = common::ReadMatrix<float>("../test/data/test1/posteriors.txt");
+  const auto obs  = common::ReadMatrix<float>("../test/data/test1/observations.txt" );
+
+  const int numClasses = post.rows();
+  const int numObs     = post.cols();
+  const int dimension  = obs.cols();
+
+  EXPECT_EQ(dimension, 2);
+  EXPECT_EQ(obs.rows(), numObs);
+
+  common::Matrix<float> m(numClasses, dimension);
+
+  EM::Scalar::MeanEst(m, post, obs);
 }
 
