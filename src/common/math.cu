@@ -22,21 +22,29 @@ __global__ void Accumulate(float* d_result, float* d_A, const size_t len)
 
   const int idx     = threadIdx.x;
 
-  size_t numThreads = blockDim.x;
+  size_t numThreads = len;
   float* readPtr    = d_A;
+  float* readEnd    = d_A + len;
   float* writePtr   = scratch;
 
-  while (numThreads) {
+  do {
+    numThreads = (numThreads + 1) >> 1;
+
     if (idx < numThreads) {
-      writePtr[idx] = readPtr[2 * idx] + readPtr[2 * idx + 1];
+      writePtr[idx] = readPtr[2 * idx];
+
+      if (readPtr + 2 * idx + 1 < readEnd) {
+        writePtr[idx] += readPtr[2 * idx + 1];
+      }
+
+      readPtr = writePtr;
+      readEnd = readPtr + numThreads;
+      writePtr += numThreads;
     }
 
     __syncthreads();
 
-    readPtr = writePtr;
-    writePtr += numThreads;
-    numThreads >>= 1;
-  }
+  } while (1 != numThreads);
 
   if (0 == idx) {
     *d_result = *readPtr;
@@ -50,13 +58,13 @@ __host__ void AccumulateDevice(float* d_result, float* d_A, const size_t len)
     throw std::runtime_error("len must be less than MAX_CUDA_THREADS");
   }
 
-  Accumulate<<<1, (len >> 1) >>>(d_result, d_A, len);
+  Accumulate<<<1, (len + 1) >> 1>>>(d_result, d_A, len);
 }
 
 //------------------------------------------------------------------------------
 __host__ float AccumulateHost(float* A, const size_t len)
 {
-  if (len >= MAX_CUDA_THREADS) {
+  if (2 * len >= MAX_CUDA_THREADS) {
     throw std::runtime_error("len must be less than MAX_CUDA_THREADS");
   }
 
