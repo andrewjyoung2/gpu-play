@@ -48,6 +48,8 @@ __host__ void MeanEstHost(common::Matrix<float>&       means,
   float* d_posteriors   { nullptr };
   float* d_observations { nullptr };
 
+  auto start = std::chrono::high_resolution_clock::now();
+
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_means),
              means.size() * sizeof(float)));
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_posteriors),
@@ -55,8 +57,13 @@ __host__ void MeanEstHost(common::Matrix<float>&       means,
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_observations),
              observations.size() * sizeof(float)));
 
+  auto end      = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to allocate device memory = " << duration.count()
+            << " microseconds"                     << std::endl;
+
   // Transfer data from host to device
-  auto start = std::chrono::high_resolution_clock::now();
+  start = std::chrono::high_resolution_clock::now();
 
   CUDA_CHECK(cudaMemcpy(d_observations,
                         observations.data(),
@@ -67,10 +74,10 @@ __host__ void MeanEstHost(common::Matrix<float>&       means,
                         posteriors.size() * sizeof(float),
                         cudaMemcpyHostToDevice));
 
-  auto end      = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-  std::cout << "Time to execute EM::CUDA::PosteriorDevice = " << duration.count()
-            << " microseconds"                          << std::endl;
+  end      = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute transfer from host to device = " << duration.count()
+            << " microseconds"                                   << std::endl;
 
   // Run the calculation
   start = std::chrono::high_resolution_clock::now();

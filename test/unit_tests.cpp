@@ -322,7 +322,15 @@ TEST(Scalar, MeanEst)
 
   common::Matrix<float> mean(numClasses, dimension);
 
+  const auto start = std::chrono::high_resolution_clock::now();
+
   EM::Scalar::MeanEst(mean, post, obs);
+
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration
+    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute EM::Scalar::Posterior = " << duration.count()
+            << " microseconds"                            << std::endl;
 
   const auto exp_mean = common::ReadMatrix<float>("../test/data/test1/updated_mean.txt" );
   for (int j = 0; j < numClasses; ++j) {

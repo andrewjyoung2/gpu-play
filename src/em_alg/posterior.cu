@@ -119,6 +119,8 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
   float* d_covariances  { nullptr };
   float* d_priors       { nullptr };
 
+  auto start = std::chrono::high_resolution_clock::now();
+
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_posteriors),
              posteriors.size() * sizeof(float)));
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_densities),
@@ -134,8 +136,13 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_priors),
              priors.size() * sizeof(float)));
 
+  auto end      = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to allocate device memory = " << duration.count()
+            << " microseconds"                     << std::endl;
+
   // Transfer data from host to device
-  auto start = std::chrono::high_resolution_clock::now();
+  start = std::chrono::high_resolution_clock::now();
 
   CUDA_CHECK(cudaMemcpy(d_observations,
                         observations.data(),
@@ -154,8 +161,8 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
                         priors.size() * sizeof(float),
                         cudaMemcpyHostToDevice));
 
-  auto end      = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  end      = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
   std::cout << "Time to transfer from host to device = " << duration.count()
             << " microseconds"                           << std::endl;
 
