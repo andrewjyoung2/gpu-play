@@ -86,3 +86,18 @@ end
 
 save('-ascii',[directory,'/updated_mean.txt'],'m')
 
+% Determine the variances
+for j=1:J
+    b=0;
+    for k=1:p
+        b=b+ P(j,k)*((x(k,:)-m(j,:))*(x(k,:)-m(j,:))');
+    end
+    s(j)=b/(n*sum(P(j,:)));
+    
+    if(s(j)<10^(-10))
+        s(j)=0.001;
+    end
+end
+
+save('-ascii',[directory,'/updated_covar.txt'],'s')
+
