@@ -146,3 +146,4 @@ __host__ void MeanEstDevice(float*    d_means,
 
 } // namespace CUDA
 } // namespace EM
+
