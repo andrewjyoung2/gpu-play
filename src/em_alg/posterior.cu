@@ -135,6 +135,8 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
              priors.size() * sizeof(float)));
 
   // Transfer data from host to device
+  auto start = std::chrono::high_resolution_clock::now();
+
   CUDA_CHECK(cudaMemcpy(d_observations,
                         observations.data(),
                         observations.size() * sizeof(float),
@@ -152,8 +154,13 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
                         priors.size() * sizeof(float),
                         cudaMemcpyHostToDevice));
 
+  auto end      = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to transfer from host to device = " << duration.count()
+            << " microseconds"                           << std::endl;
+
   // Run the calculation
-  const auto start = std::chrono::high_resolution_clock::now();
+  start = std::chrono::high_resolution_clock::now();
 
   PosteriorDevice(d_posteriors,
                   d_densities,
@@ -168,13 +175,14 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
 
   cudaDeviceSynchronize();
 
-  const auto end = std::chrono::high_resolution_clock::now();
-  const auto duration
-    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  end      = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
   std::cout << "Time to execute EM::CUDA::PosteriorDevice = " << duration.count()
             << " microseconds"                          << std::endl;
 
   // Transfer results from device to host
+  start = std::chrono::high_resolution_clock::now();
+
   CUDA_CHECK(cudaMemcpy(posteriors.data(),
                         d_posteriors,
                         posteriors.size() * sizeof(float),
@@ -187,6 +195,11 @@ __host__ void PosteriorHost(common::Matrix<float>&       posteriors,
                         d_denominators,
                         denominators.size() * sizeof(float),
                         cudaMemcpyDeviceToHost));
+
+  end      = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to transfer from device to host = " << duration.count()
+            << " microseconds"                           << std::endl;
 
   // Cleanup
   CUDA_CHECK(cudaFree(d_posteriors));
