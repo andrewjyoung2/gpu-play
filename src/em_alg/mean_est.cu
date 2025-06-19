@@ -5,7 +5,28 @@
 namespace EM { namespace CUDA {
 
 //------------------------------------------------------------------------------
-// TODO: __global__ void MeanEstKernel
+__global__ void MeanEstKernel(float*    d_means,
+                              float*    d_posteriors,
+                              float*    d_observations,
+                              const int dimension,
+                              const int numClasses,
+                              const int numObs)
+{
+  const int n = threadIdx.x; // column index, coordinate index
+  const int j = threadIdx.y; // row index, class index
+
+  // denominator = sum_k posterior(j, k)
+  // numerator   = sum_k posterior(j, k) * obs(k, n)
+  float denom { 0 };
+  float num   { 0 };
+  for (int k = 0; k < numObs; ++k) {
+    denom += d_posteriors[k + j * numObs];
+    num   += d_posteriors[k + j * numObs] * d_observations[n + k * dimension];
+  }
+
+  // write result to entry (j, n) of means matrix
+  d_means[n + j * dimension] = num / denom;
+}
 
 //------------------------------------------------------------------------------
 __host__ void MeanEstHost(common::Matrix<float>&       means,
@@ -61,6 +82,8 @@ __host__ void MeanEstHost(common::Matrix<float>&       means,
                 numClasses,
                 numObs);
 
+  cudaDeviceSynchronize();
+
   end      = std::chrono::high_resolution_clock::now();
   duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
   std::cout << "Time to execute EM::CUDA::MeanEstDevice = " << duration.count()
@@ -97,6 +120,21 @@ __host__ void MeanEstDevice(float*    d_means,
   ASSERT(nullptr != d_means);
   ASSERT(nullptr != d_posteriors);
   ASSERT(nullptr != d_observations);
+
+  // Run kernel
+  const int xDim = numClasses;
+  const int yDim = dimension;
+  ASSERT(xDim * yDim < 256);
+
+  const dim3 threadsPerBlock(xDim, yDim);
+  const int  numBlocks { 1 };
+
+  MeanEstKernel<<<numBlocks, threadsPerBlock>>>(d_means,
+                                                d_posteriors,
+                                                d_observations,
+                                                dimension,
+                                                numClasses,
+                                                numObs);
 }
 
 } // namespace CUDA
