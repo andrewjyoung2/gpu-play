@@ -76,6 +76,7 @@ end
 Q_tot=[Q_tot Q]
 
 % Update the means
+m_old=m;
 for j=1:J
     a=zeros(1,n);
     for k=1:p
@@ -87,6 +88,7 @@ end
 save('-ascii',[directory,'/updated_mean.txt'],'m')
 
 % Determine the variances
+s_old=s;
 for j=1:J
     b=0;
     for k=1:p
@@ -102,6 +104,7 @@ end
 save('-ascii',[directory,'/updated_covar.txt'],'s')
 
 % Determine the a priori probabilities
+P_old=Pa;
 for j=1:J
     a=0;
     for k=1:p
@@ -111,4 +114,7 @@ for j=1:J
 end
 
 save('-ascii',[directory,'/updated_prior.txt'],'Pa')
+
+e=sum(abs(Pa-P_old))+sum(sum(abs(m-m_old)))+sum(abs(s-s_old));    
+save('-ascii',[directory,'/error.txt'],'e')
 
