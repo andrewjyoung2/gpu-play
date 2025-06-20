@@ -384,10 +384,12 @@ TEST(Scalar, CovarEst)
   EXPECT_EQ(mean_est.cols(), dim);
 
   common::Vector<float> covar_est(numClasses);
+  common::Vector<float> prior_est(numClasses);
 
   const auto start = std::chrono::high_resolution_clock::now();
 
   EM::Scalar::CovarEst(covar_est,
+                       prior_est,
                        mean_est,
                        post,
                        obs);
@@ -405,6 +407,15 @@ TEST(Scalar, CovarEst)
 
   for (int j = 0; j < numClasses; ++j) {
     EXPECT_NEAR(exp_covar(0, j), covar_est[j], eps);
+  }
+
+  const auto exp_prior
+    = common::ReadMatrix<float>("../test/data/test1/updated_prior.txt" );
+  EXPECT_EQ(exp_prior.rows(), 1);
+  EXPECT_EQ(exp_prior.cols(), numClasses);
+
+  for (int j = 0; j < numClasses; ++j) {
+    EXPECT_NEAR(exp_prior(0, j), prior_est[j], eps);
   }
 }
 

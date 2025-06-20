@@ -5,6 +5,7 @@
 namespace EM { namespace Scalar {
 
 void CovarEst(common::Vector<float>&       covar_est,
+              common::Vector<float>&       prior_est,
               const common::Matrix<float>& mean_est,
               const common::Matrix<float>& posteriors,
               const common::Matrix<float>& observations)
@@ -33,6 +34,7 @@ void CovarEst(common::Vector<float>&       covar_est,
     }
 
     covar_est[j] = num / (dimension * den);
+    prior_est[j] = den / numObs;
   }
 }
 

@@ -7,6 +7,7 @@
 namespace EM { namespace Scalar {
 
 void CovarEst(common::Vector<float>&       covar_est,
+              common::Vector<float>&       prior_est,
               const common::Matrix<float>& mean_est,
               const common::Matrix<float>& posteriors,
               const common::Matrix<float>& observations);
