@@ -52,20 +52,20 @@ __global__ void CovarEstKernel(float*    d_covar_est,
       for (int z = 0; z < blockDim.z; ++z) {
         num += scratch[j][0][z];
       }
-      scratch[0][0][0] = num;
+      scratch[j][0][0] = num;
     }
     else if ((0 == threadIdx.y) && (1 == threadIdx.z)) {
       float den { 0 };
       for (int z = 0; z < blockDim.z; ++z) {
         den += scratch[j][1][z];
       }
-      scratch[0][0][1] = den;
+      scratch[j][1][0] = den;
     }
 
     __syncthreads();
 
     if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
-      d_covar_est[j] = scratch[0][0][0] / (dimension * scratch[0][0][1]);
+      d_covar_est[j] = scratch[j][0][0] / (dimension * scratch[j][1][0]);
     }
   }
 }
