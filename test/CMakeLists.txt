@@ -33,6 +33,8 @@ set(TEST_FILES
   ${CMAKE_SOURCE_DIR}/src/em_alg/mean_est.cpp
   ${CMAKE_SOURCE_DIR}/src/em_alg/mean_est.cu
   ${CMAKE_SOURCE_DIR}/src/em_alg/mean_est.hpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/error_est.hpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/error_est.cpp
   ${CMAKE_SOURCE_DIR}/src/welcome.cu
   ${CMAKE_SOURCE_DIR}/src/welcome.hpp
 )

@@ -14,6 +14,7 @@
 #include "src/em_alg/covar_est.hpp"
 #include "src/em_alg/posterior.hpp"
 #include "src/em_alg/mean_est.hpp"
+#include "src/em_alg/error_est.hpp"
 #include "src/welcome.hpp"
 
 //------------------------------------------------------------------------------
@@ -465,5 +466,32 @@ TEST(CUDA, CovarEst)
   for (int j = 0; j < numClasses; ++j) {
     EXPECT_NEAR(exp_prior(0, j), prior_est[j], eps);
   }
+}
+
+TEST(Scalar, ErrorEst)
+{
+  const auto mean_old
+    = common::ReadMatrix<float>("../test/data/test1/initial_mean.txt");
+  const auto mean_new
+    = common::ReadMatrix<float>("../test/data/test1/updated_mean.txt");
+  const auto covar_old
+    = common::ReadMatrix<float>("../test/data/test1/initial_covariance.txt");
+  const auto covar_new
+    = common::ReadMatrix<float>("../test/data/test1/updated_covar.txt");
+  const auto prior_old
+    = common::ReadMatrix<float>("../test/data/test1/initial_priors.txt");
+  const auto prior_new
+    = common::ReadMatrix<float>("../test/data/test1/updated_prior.txt");
+
+  const auto error = EM::Scalar::ErrorEst(mean_new,
+                                          mean_old,
+                                          covar_new.get_row(0),
+                                          covar_old.get_row(0),
+                                          prior_new.get_row(0),
+                                          prior_old.get_row(0));
+  const auto exp_error
+    = common::ReadMatrix<float>("../test/data/test1/error.txt")(0, 0);
+
+  EXPECT_NEAR(exp_error, error, eps);
 }
 
