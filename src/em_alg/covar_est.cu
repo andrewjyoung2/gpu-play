@@ -13,24 +13,44 @@ __global__ void CovarEstKernel(float*    d_covar_est,
                                const int numClasses,
                                const int numObs)
 {
+  __shared__ float scratch[2];
+
   const int j = threadIdx.x;
 
   if (j < numClasses) {
-    float num { 0 };
-    float den { 0 };
-
-    // point to j-th mean vector
     float* m = d_mean_est + j * dimension;
 
-    for (int k = 0; k < numObs; ++k) {
-      // point to k-th observation vector
-      float*      x           = d_observations + k * dimension;
-      const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
-      num += d_posteriors[k + j * numObs] * normSquared;
-      den += d_posteriors[k + j * numObs];
+    if (0 == threadIdx.y) {
+      float num { 0 };
+
+      for (int k = 0; k < numObs; ++k) {
+        // point to k-th observation vector
+        float*      x           = d_observations + k * dimension;
+        const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
+        num += d_posteriors[k + j * numObs] * normSquared;
+      }
+
+      scratch[0] = num;
+    }
+    else if (1 == threadIdx.y) {
+      float den { 0 };
+
+      for (int k = 0; k < numObs; ++k) {
+        // point to k-th observation vector
+        float*      x           = d_observations + k * dimension;
+        const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
+        den += d_posteriors[k + j * numObs];
+      }
+
+      scratch[1] = den;
     }
 
-    d_covar_est[j] = num / (dimension * den);
+    __syncthreads();
+
+    if (0 == threadIdx.y) {
+      // num / (dimension * den)
+      d_covar_est[j] = scratch[0] / (dimension * scratch[1]);
+    }
   }
 }
 
@@ -143,11 +163,13 @@ __host__ void CovarEstDevice(float*    d_covar_est,
   ASSERT(nullptr != d_observations);
 
   const int xDim { numClasses };
-  const int yDim { 64 };
+  //const int yDim { 64 };
+  const int yDim { 2 };
   ASSERT(xDim * yDim < 256);
 
   const dim3 threadsPerBlock(xDim, yDim);
-  const int  numBlocks = (numObs + yDim - 1) / yDim;
+  //const int  numBlocks = (numObs + yDim - 1) / yDim;
+  const int numBlocks = 1;
 
   CovarEstKernel<<< numBlocks, threadsPerBlock >>>(d_covar_est,
                                                    d_mean_est,
