@@ -16,6 +16,8 @@ __global__ void VectorMultiply(float* C,
 }
 
 //------------------------------------------------------------------------------
+// Parallel reduction
+// https://leimao.github.io/blog/CUDA-Reduction/
 __global__ void Accumulate(float* d_result, float* d_A, const size_t len)
 {
   __shared__ float scratch[MAX_CUDA_THREADS];

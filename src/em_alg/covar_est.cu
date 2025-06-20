@@ -50,29 +50,9 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     }
 
     __syncthreads();
-#if 0
-    if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
-      // num / (dimension * den)
-      float num { 0 };
-      for (int z = 0; z < blockDim.z; ++z) {
-        num += scratch[j][0][z];
-      }
-      scratch[j][0][0] = num;
-    }
-    else if ((0 == threadIdx.y) && (1 == threadIdx.z)) {
-      float den { 0 };
-      for (int z = 0; z < blockDim.z; ++z) {
-        den += scratch[j][1][z];
-      }
-      scratch[j][1][0] = den;
-    }
 
-    __syncthreads();
-
-    if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
-      d_covar_est[j] = scratch[j][0][0] / (dimension * scratch[j][1][0]);
-    }
-#else
+    // Parallel reduction
+    // https://leimao.github.io/blog/CUDA-Reduction/
     __shared__ float morescratch[2][2][64];
     if (threadIdx.z < 32) {
       morescratch[j][threadIdx.y][threadIdx.z]
@@ -112,7 +92,6 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
       d_covar_est[j] = morescratch[j][0][62] / (dimension * morescratch[j][1][62]);
     }
-#endif
   }
 }
 
