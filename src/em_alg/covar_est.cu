@@ -13,7 +13,7 @@ __global__ void CovarEstKernel(float*    d_covar_est,
                                const int numClasses,
                                const int numObs)
 {
-  __shared__ float scratch[2];
+  __shared__ float scratch[3][2];
 
   const int j = threadIdx.x;
 
@@ -30,7 +30,7 @@ __global__ void CovarEstKernel(float*    d_covar_est,
         num += d_posteriors[k + j * numObs] * normSquared;
       }
 
-      scratch[0] = num;
+      scratch[j][0] = num;
     }
     else if (1 == threadIdx.y) {
       float den { 0 };
@@ -39,14 +39,14 @@ __global__ void CovarEstKernel(float*    d_covar_est,
         den += d_posteriors[k + j * numObs];
       }
 
-      scratch[1] = den;
+      scratch[j][1] = den;
     }
 
     __syncthreads();
 
     if (0 == threadIdx.y) {
       // num / (dimension * den)
-      d_covar_est[j] = scratch[0] / (dimension * scratch[1]);
+      d_covar_est[j] = scratch[j][0] / (dimension * scratch[j][1]);
     }
   }
 }
