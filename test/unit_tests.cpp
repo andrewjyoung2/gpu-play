@@ -434,12 +434,14 @@ TEST(CUDA, CovarEst)
                          obs);
 
   const auto exp_covar
-    = common::ReadMatrix<float>("../test/data/test1/updated_covar.txt" );
+    = common::ReadMatrix<float>("../test/data/test1/updated_covar.txt");
   EXPECT_EQ(exp_covar.rows(), 1);
   EXPECT_EQ(exp_covar.cols(), numClasses);
 
   for (int j = 0; j < numClasses; ++j) {
     EXPECT_NEAR(exp_covar(0, j), covar_est[j], eps);
   }
+
+  common::WriteVector<float>("../test/data/test1/debug_covar.txt", covar_est);
 }
 

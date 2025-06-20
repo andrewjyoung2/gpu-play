@@ -63,5 +63,18 @@ void WriteMatrix(const std::string& filename, const Matrix<T>& Mat)
     ofs << std::endl;
   }
 }
+
+template<typename T>
+void WriteVector(const std::string& filename, const Vector<T>& vec)
+{
+  std::ofstream ofs(filename);
+  ASSERT(ofs.is_open());
+
+  for (int i = 0; i < vec.size(); ++i) {
+    ofs << vec[i] << ' ';
+  }
+  ofs << std::endl;
+}
+
 } // namespace common
 
