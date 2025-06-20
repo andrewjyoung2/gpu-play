@@ -13,9 +13,10 @@ __global__ void CovarEstKernel(float*    d_covar_est,
                                const int numClasses,
                                const int numObs)
 {
-  __shared__ float scratch[3][2][50];
+  __shared__ float scratch[3][2][64];
 
   const int j = threadIdx.x;
+  const int groupSize = (numObs + blockDim.z - 1) / blockDim.z;
 
   if (j < numClasses) {
     float* m = d_mean_est + j * dimension;
@@ -23,12 +24,14 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     if (0 == threadIdx.y) {
       float num { 0 };
 
-      for (int k = 0; k < numObs / blockDim.z; ++k) {
-        const int obsIdx = k + threadIdx.z * numObs / blockDim.z;
+      for (int k = 0; k < groupSize; ++k) {
+        const int obsIdx = k + threadIdx.z * groupSize;
         // point to k-th observation vector
-        float*      x           = d_observations + obsIdx * dimension;
-        const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
-        num += d_posteriors[j * numObs + obsIdx] * normSquared;
+        if (obsIdx < numObs) {
+          float*      x           = d_observations + obsIdx * dimension;
+          const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
+          num += d_posteriors[j * numObs + obsIdx] * normSquared;
+        }
       }
 
       scratch[j][0][threadIdx.z] = num;
@@ -36,9 +39,11 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     else if (1 == threadIdx.y) {
       float den { 0 };
 
-      for (int k = 0; k < numObs / blockDim.z; ++k) {
-        const int obsIdx = k + threadIdx.z * numObs / blockDim.z;
-        den += d_posteriors[j * numObs + obsIdx];
+      for (int k = 0; k < groupSize; ++k) {
+        const int obsIdx = k + threadIdx.z * groupSize;
+        if (obsIdx < numObs) {
+          den += d_posteriors[j * numObs + obsIdx];
+        }
       }
 
       scratch[j][1][threadIdx.z] = den;
@@ -181,7 +186,7 @@ __host__ void CovarEstDevice(float*    d_covar_est,
   const int xDim { numClasses };
   //const int yDim { 64 };
   const int yDim { 2 };
-  const int zDim { 50 };
+  const int zDim { 64 };
   ASSERT(xDim * yDim * zDim < 512);
 
   const dim3 threadsPerBlock(xDim, yDim, zDim);
