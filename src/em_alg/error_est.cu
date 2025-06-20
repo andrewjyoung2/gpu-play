@@ -22,10 +22,10 @@ __global__ void ErrorEstKernel(float* d_error_est,
     scratch[idx] = abs(d_mean_new[idx] - d_mean_old[idx]);
   }
   else if (idx < numClasses * (dimension + 1)) {
-    scratch[idx] = abs(d_covar_new[idx] - d_covar_old[idx]);
+    scratch[idx] = abs(d_covar_new[idx - 6] - d_covar_old[idx - 6]);
   }
   else if (idx < numClasses * (dimension + 2)) {
-    scratch[idx] = abs(d_prior_new[idx] - d_prior_old[idx]);
+    scratch[idx] = abs(d_prior_new[idx - 9] - d_prior_old[idx - 9]);
   }
 
   __syncthreads();
