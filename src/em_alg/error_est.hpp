@@ -24,7 +24,7 @@ __host__ float ErrorEstHost(const common::Matrix<float>& mean_new,
                             const common::Vector<float>& prior_new,
                             const common::Vector<float>& prior_old);
 
-__host__ void ErrorEstDevice(float* error_est,
+__host__ void ErrorEstDevice(float* d_error_est,
                              float* d_mean_new,
                              float* d_mean_old,
                              float* d_covar_new,

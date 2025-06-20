@@ -14,8 +14,8 @@ float ErrorEst(const common::Matrix<float>& mean_new,
   const int numClasses = mean_new.rows();
   const int dimension  = mean_new.cols();
 
-  ASSERT(mean_old.rows() == numClasses);
-  ASSERT(mean_old.cols() == dimension);
+  ASSERT(mean_old.rows()  == numClasses);
+  ASSERT(mean_old.cols()  == dimension);
   ASSERT(covar_new.size() == numClasses);
   ASSERT(covar_old.size() == numClasses);
   ASSERT(prior_new.size() == numClasses);
