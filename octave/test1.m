@@ -101,3 +101,14 @@ end
 
 save('-ascii',[directory,'/updated_covar.txt'],'s')
 
+% Determine the a priori probabilities
+for j=1:J
+    a=0;
+    for k=1:p
+        a=a+P(j,k);
+    end
+    Pa(j)=a/p;
+end
+
+save('-ascii',[directory,'/updated_prior.txt'],'Pa')
+
