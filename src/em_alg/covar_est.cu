@@ -50,7 +50,7 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     }
 
     __syncthreads();
-
+#if 0
     if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
       // num / (dimension * den)
       float num { 0 };
@@ -72,6 +72,47 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
       d_covar_est[j] = scratch[j][0][0] / (dimension * scratch[j][1][0]);
     }
+#else
+    __shared__ float morescratch[2][2][64];
+    if (threadIdx.z < 32) {
+      morescratch[j][threadIdx.y][threadIdx.z]
+        = scratch[j][threadIdx.y][2 * threadIdx.z]
+        + scratch[j][threadIdx.y][2 * threadIdx.z + 1];
+    }
+    __syncthreads();
+    if (threadIdx.z < 16) {
+      morescratch[j][threadIdx.y][32 + threadIdx.z]
+        = morescratch[j][threadIdx.y][2 * threadIdx.z]
+        + morescratch[j][threadIdx.y][2 * threadIdx.z + 1];
+    }
+    __syncthreads();
+    if (threadIdx.z < 8) {
+      morescratch[j][threadIdx.y][48 + threadIdx.z]
+        = morescratch[j][threadIdx.y][32 + 2 * threadIdx.z]
+        + morescratch[j][threadIdx.y][32 + 2 * threadIdx.z + 1];
+    }
+    __syncthreads();
+    if (threadIdx.z < 4) {
+      morescratch[j][threadIdx.y][56 + threadIdx.z]
+        = morescratch[j][threadIdx.y][48 + 2 * threadIdx.z]
+        + morescratch[j][threadIdx.y][48 + 2 * threadIdx.z + 1];
+    }
+    __syncthreads();
+    if (threadIdx.z < 2) {
+      morescratch[j][threadIdx.y][60 + threadIdx.z]
+        = morescratch[j][threadIdx.y][56 + 2 * threadIdx.z]
+        + morescratch[j][threadIdx.y][56 + 2 * threadIdx.z + 1];
+    }
+    if (0 == threadIdx.z) {
+      morescratch[j][threadIdx.y][62]
+        = morescratch[j][threadIdx.y][60]
+        + morescratch[j][threadIdx.y][61];
+    }
+    __syncthreads();
+    if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
+      d_covar_est[j] = morescratch[j][0][62] / (dimension * morescratch[j][1][62]);
+    }
+#endif
   }
 }
 
