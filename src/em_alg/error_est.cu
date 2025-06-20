@@ -4,7 +4,7 @@
 namespace EM { namespace CUDA {
 
 //------------------------------------------------------------------------------
-__global__ void ErrorEstKernel(float* error_est,
+__global__ void ErrorEstKernel(float* d_error_est,
                                float* d_mean_new,
                                float* d_mean_old,
                                float* d_covar_new,
@@ -14,6 +14,31 @@ __global__ void ErrorEstKernel(float* error_est,
                                const int dimension,
                                const int numClasses)
 {
+  __shared__ float scratch[12];
+
+  const int idx = threadIdx.x;
+
+  if (idx < numClasses * dimension) {
+    scratch[idx] = abs(d_mean_new[idx] - d_mean_old[idx]);
+  }
+  else if (idx < numClasses * (dimension + 1)) {
+    scratch[idx] = abs(d_covar_new[idx] - d_covar_old[idx]);
+  }
+  else if (idx < numClasses * (dimension + 2)) {
+    scratch[idx] = abs(d_prior_new[idx] - d_prior_old[idx]);
+  }
+
+  __syncthreads();
+
+  // Add them up
+  if (0 == idx) {
+    float err { 0 };
+    for (int i = 0; i < 12; ++i) {
+      err += scratch[i];
+    }
+
+    *d_error_est = err;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -124,7 +149,22 @@ __host__ void ErrorEstDevice(float* d_error_est,
   ASSERT(nullptr != d_covar_new);
   ASSERT(nullptr != d_covar_old);
 
+  const int numBlocks { 1 };
+  const int threadsPerBlock = numClasses * dimension // mean
+                            + numClasses             // covar
+                            + numClasses;            // prior
+
   // Run kernel
+  ErrorEstKernel<<< numBlocks, threadsPerBlock >>>(d_error_est,
+                                                   d_mean_new,
+                                                   d_mean_old,
+                                                   d_covar_new,
+                                                   d_covar_old,
+                                                   d_prior_new,
+                                                   d_prior_old,
+                                                   dimension,
+                                                   numClasses);
+
 }
 
 } // namespace CUDA
