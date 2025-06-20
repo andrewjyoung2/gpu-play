@@ -48,8 +48,13 @@ __global__ void CovarEstKernel(float*    d_covar_est,
 
     if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
       // num / (dimension * den)
-      d_covar_est[j] = (scratch[j][0][0] + scratch[j][0][1])
-                     / (dimension * (scratch[j][1][0] + scratch[j][1][1]));
+      float num { 0 };
+      float den { 0 };
+      for (int z = 0; z < blockDim.z; ++z) {
+        num += scratch[j][0][z];
+        den += scratch[j][1][z];
+      }
+      d_covar_est[j] = num / (dimension * den);
     }
   }
 }
