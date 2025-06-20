@@ -120,6 +120,8 @@ __host__ float ErrorEstHost(const common::Matrix<float>& mean_new,
                            dimension,
                            numClasses);
 
+  cudaDeviceSynchronize();
+
   // Transfer results from device to host
   float error_est { 0.7734 };
   CUDA_CHECK(cudaMemcpy(&error_est,
