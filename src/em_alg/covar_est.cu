@@ -5,6 +5,34 @@
 namespace EM { namespace CUDA {
 
 //------------------------------------------------------------------------------
+__global__ void CovarEstKernel(float*    d_covar_est,
+                               float*    d_mean_est,
+                               float*    d_posteriors,
+                               float*    d_observations,
+                               const int dimension,
+                               const int numClasses,
+                               const int numObs)
+{
+  const int j = threadIdx.x;
+
+  if (j < numClasses) {
+    float num { 0 };
+    float den { 0 };
+
+    // point to j-th mean vector
+    float* m = d_mean_est + j * dimension;
+
+    for (int k = 0; k < numObs; ++k) {
+      // point to k-th observation vector
+      float*      x           = d_observations + k * dimension;
+      const float normSquared = pow(x[0] - m[0], 2) + pow(x[0] - m[0], 2);
+      num += d_posteriors[k + j * numObs] * normSquared;
+      den += d_posteriors[k + j * numObs];
+    }
+
+    d_covar_est[j] = num / (dimension * den);
+  }
+}
 
 //------------------------------------------------------------------------------
 __host__ void CovarEstHost(common::Vector<float>&       covar_est,
@@ -113,6 +141,21 @@ __host__ void CovarEstDevice(float*    d_covar_est,
   ASSERT(nullptr != d_mean_est);
   ASSERT(nullptr != d_posteriors);
   ASSERT(nullptr != d_observations);
+
+  const int xDim { numClasses };
+  const int yDim { 64 };
+  ASSERT(xDim * yDim < 256);
+
+  const dim3 threadsPerBlock(xDim, yDim);
+  const int  numBlocks = (numObs + yDim - 1) / yDim;
+
+  CovarEstKernel<<< numBlocks, threadsPerBlock >>>(d_covar_est,
+                                                   d_mean_est,
+                                                   d_posteriors,
+                                                   d_observations,
+                                                   dimension,
+                                                   numClasses,
+                                                   numObs);
 }
 
 } // namespace CUDA
