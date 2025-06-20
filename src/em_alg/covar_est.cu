@@ -6,6 +6,7 @@ namespace EM { namespace CUDA {
 
 //------------------------------------------------------------------------------
 __global__ void CovarEstKernel(float*    d_covar_est,
+                               float*    d_prior_est,
                                float*    d_mean_est,
                                float*    d_posteriors,
                                float*    d_observations,
@@ -91,12 +92,14 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     __syncthreads();
     if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
       d_covar_est[j] = morescratch[j][0][62] / (dimension * morescratch[j][1][62]);
+      d_prior_est[j] = morescratch[j][1][62] / numObs;
     }
   }
 }
 
 //------------------------------------------------------------------------------
 __host__ void CovarEstHost(common::Vector<float>&       covar_est,
+                           common::Vector<float>&       prior_est,
                            const common::Matrix<float>& mean_est,
                            const common::Matrix<float>& posteriors,
                            const common::Matrix<float>& observations)
@@ -106,6 +109,7 @@ __host__ void CovarEstHost(common::Vector<float>&       covar_est,
   const int dimension  = observations.cols();
 
   ASSERT(dimension         == 2);
+  ASSERT(prior_est.size()  == numClasses);
   ASSERT(mean_est.rows()   == numClasses);
   ASSERT(mean_est.cols()   == dimension);
   ASSERT(posteriors.rows() == numClasses);
@@ -113,6 +117,7 @@ __host__ void CovarEstHost(common::Vector<float>&       covar_est,
 
   // Allocate device memory
   float* d_covar_est    { nullptr };
+  float* d_prior_est    { nullptr };
   float* d_mean_est     { nullptr };
   float* d_posteriors   { nullptr };
   float* d_observations { nullptr };
@@ -121,6 +126,8 @@ __host__ void CovarEstHost(common::Vector<float>&       covar_est,
 
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_covar_est),
              covar_est.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_prior_est),
+             prior_est.size() * sizeof(float)));
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_mean_est),
              mean_est.size() * sizeof(float)));
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_posteriors),
@@ -158,6 +165,7 @@ __host__ void CovarEstHost(common::Vector<float>&       covar_est,
   start = std::chrono::high_resolution_clock::now();
 
   CovarEstDevice(d_covar_est,
+                 d_prior_est,
                  d_mean_est,
                  d_posteriors,
                  d_observations,
@@ -172,13 +180,16 @@ __host__ void CovarEstHost(common::Vector<float>&       covar_est,
   std::cout << "Time to execute EM::CUDA::CovarEstDevice = " << duration.count()
             << " microseconds"                               << std::endl;
 
-
   // Transfer results from device to host
   start = std::chrono::high_resolution_clock::now();
 
   CUDA_CHECK(cudaMemcpy(covar_est.data(),
                         d_covar_est,
                         covar_est.size() * sizeof(float),
+                        cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaMemcpy(prior_est.data(),
+                        d_prior_est,
+                        prior_est.size() * sizeof(float),
                         cudaMemcpyDeviceToHost));
 
   end      = std::chrono::high_resolution_clock::now();
@@ -191,6 +202,7 @@ __host__ void CovarEstHost(common::Vector<float>&       covar_est,
 
 //------------------------------------------------------------------------------
 __host__ void CovarEstDevice(float*    d_covar_est,
+                             float*    d_prior_est,
                              float*    d_mean_est,
                              float*    d_posteriors,
                              float*    d_observations,
@@ -199,6 +211,7 @@ __host__ void CovarEstDevice(float*    d_covar_est,
                              const int numObs)
 {
   ASSERT(nullptr != d_covar_est);
+  ASSERT(nullptr != d_prior_est);
   ASSERT(nullptr != d_mean_est);
   ASSERT(nullptr != d_posteriors);
   ASSERT(nullptr != d_observations);
@@ -214,6 +227,7 @@ __host__ void CovarEstDevice(float*    d_covar_est,
   const int numBlocks = 1;
 
   CovarEstKernel<<< numBlocks, threadsPerBlock >>>(d_covar_est,
+                                                   d_prior_est,
                                                    d_mean_est,
                                                    d_posteriors,
                                                    d_observations,

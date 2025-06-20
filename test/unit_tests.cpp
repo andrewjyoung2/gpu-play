@@ -438,8 +438,10 @@ TEST(CUDA, CovarEst)
   EXPECT_EQ(mean_est.cols(), dim);
 
   common::Vector<float> covar_est(numClasses);
+  common::Vector<float> prior_est(numClasses);
 
   EM::CUDA::CovarEstHost(covar_est,
+                         prior_est,
                          mean_est,
                          post,
                          obs);
@@ -454,5 +456,14 @@ TEST(CUDA, CovarEst)
   }
 
   common::WriteVector<float>("../test/data/test1/debug_covar.txt", covar_est);
+
+  const auto exp_prior
+    = common::ReadMatrix<float>("../test/data/test1/updated_prior.txt" );
+  EXPECT_EQ(exp_prior.rows(), 1);
+  EXPECT_EQ(exp_prior.cols(), numClasses);
+
+  for (int j = 0; j < numClasses; ++j) {
+    EXPECT_NEAR(exp_prior(0, j), prior_est[j], eps);
+  }
 }
 
