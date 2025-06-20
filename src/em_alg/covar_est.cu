@@ -25,8 +25,8 @@ __global__ void CovarEstKernel(float*    d_covar_est,
 
       for (int k = 0; k < (numObs >> 1); ++k) {
         // point to k-th observation vector
-        float*      x           = d_observations + k * dimension
-                                + blockIdx.x * (numObs >> 1);
+        float*      x           = d_observations
+                                + (k + blockIdx.x * (numObs >> 1)) * dimension;
         const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
         num += d_posteriors[k + j * numObs + blockIdx.x * (numObs >> 1)] * normSquared;
       }
