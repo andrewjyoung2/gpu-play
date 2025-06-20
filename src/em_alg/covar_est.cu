@@ -43,7 +43,7 @@ __global__ void CovarEstKernel(float*    d_covar_est,
 
       scratch[j][1][threadIdx.z] = den;
     }
-#if 0
+
     __syncthreads();
 
     if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
@@ -67,7 +67,6 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
       d_covar_est[j] = scratch[j][0][0] / (dimension * scratch[j][1][0]);
     }
-#endif
   }
 }
 
