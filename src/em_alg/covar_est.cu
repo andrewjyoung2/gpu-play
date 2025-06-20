@@ -13,7 +13,7 @@ __global__ void CovarEstKernel(float*    d_covar_est,
                                const int numClasses,
                                const int numObs)
 {
-  __shared__ float scratch[3][2][25];
+  __shared__ float scratch[3][2][50];
 
   const int j = threadIdx.x;
 
@@ -170,8 +170,8 @@ __host__ void CovarEstDevice(float*    d_covar_est,
   const int xDim { numClasses };
   //const int yDim { 64 };
   const int yDim { 2 };
-  const int zDim { 25 };
-  ASSERT(xDim * yDim * zDim < 256);
+  const int zDim { 50 };
+  ASSERT(xDim * yDim * zDim < 512);
 
   const dim3 threadsPerBlock(xDim, yDim, zDim);
   //const int  numBlocks = (numObs + yDim - 1) / yDim;
