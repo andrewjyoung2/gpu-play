@@ -24,11 +24,11 @@ __global__ void CovarEstKernel(float*    d_covar_est,
       float num { 0 };
 
       for (int k = 0; k < (numObs >> 1); ++k) {
+        const int obsIdx = k + blockIdx.x * (numObs >> 1);
         // point to k-th observation vector
-        float*      x           = d_observations
-                                + (k + blockIdx.x * (numObs >> 1)) * dimension;
+        float*      x           = d_observations + obsIdx * dimension;
         const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
-        num += d_posteriors[k + j * numObs + blockIdx.x * (numObs >> 1)] * normSquared;
+        num += d_posteriors[j * numObs + obsIdx] * normSquared;
       }
 
       scratch[j][0][blockIdx.x] = num;
@@ -37,7 +37,8 @@ __global__ void CovarEstKernel(float*    d_covar_est,
       float den { 0 };
 
       for (int k = 0; k < (numObs >> 1); ++k) {
-        den += d_posteriors[k + j * numObs + blockIdx.x * (numObs >> 1)];
+        const int obsIdx = k + blockIdx.x * (numObs >> 1);
+        den += d_posteriors[j * numObs + obsIdx];
       }
 
       scratch[j][1][blockIdx.x] = den;
