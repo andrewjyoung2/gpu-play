@@ -24,29 +24,29 @@ __global__ void CovarEstKernel(float*    d_covar_est,
       float num { 0 };
 
       for (int k = 0; k < (numObs >> 1); ++k) {
-        const int obsIdx = k + blockIdx.x * (numObs >> 1);
+        const int obsIdx = k + threadIdx.z * (numObs >> 1);
         // point to k-th observation vector
         float*      x           = d_observations + obsIdx * dimension;
         const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
         num += d_posteriors[j * numObs + obsIdx] * normSquared;
       }
 
-      scratch[j][0][blockIdx.x] = num;
+      scratch[j][0][threadIdx.z] = num;
     }
     else if (1 == threadIdx.y) {
       float den { 0 };
 
       for (int k = 0; k < (numObs >> 1); ++k) {
-        const int obsIdx = k + blockIdx.x * (numObs >> 1);
+        const int obsIdx = k + threadIdx.z * (numObs >> 1);
         den += d_posteriors[j * numObs + obsIdx];
       }
 
-      scratch[j][1][blockIdx.x] = den;
+      scratch[j][1][threadIdx.z] = den;
     }
 
     __syncthreads();
 
-    if ((0 == threadIdx.y) && (0 == blockIdx.x)) {
+    if ((0 == threadIdx.y) && (0 == threadIdx.z)) {
       // num / (dimension * den)
       d_covar_est[j] = (scratch[j][0][0] + scratch[j][0][1])
                      / (dimension * (scratch[j][1][0] + scratch[j][1][1]));
@@ -165,11 +165,12 @@ __host__ void CovarEstDevice(float*    d_covar_est,
   const int xDim { numClasses };
   //const int yDim { 64 };
   const int yDim { 2 };
-  ASSERT(xDim * yDim < 256);
+  const int zDim { 2 };
+  ASSERT(xDim * yDim * zDim < 256);
 
-  const dim3 threadsPerBlock(xDim, yDim);
+  const dim3 threadsPerBlock(xDim, yDim, zDim);
   //const int  numBlocks = (numObs + yDim - 1) / yDim;
-  const int numBlocks = 2;
+  const int numBlocks = 1;
 
   CovarEstKernel<<< numBlocks, threadsPerBlock >>>(d_covar_est,
                                                    d_mean_est,
