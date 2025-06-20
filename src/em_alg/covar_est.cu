@@ -13,7 +13,7 @@ __global__ void CovarEstKernel(float*    d_covar_est,
                                const int numClasses,
                                const int numObs)
 {
-  __shared__ float scratch[3][2];
+  __shared__ float scratch[3][2][2];
 
   const int j = threadIdx.x;
 
@@ -23,30 +23,32 @@ __global__ void CovarEstKernel(float*    d_covar_est,
     if (0 == threadIdx.y) {
       float num { 0 };
 
-      for (int k = 0; k < numObs; ++k) {
+      for (int k = 0; k < (numObs >> 1); ++k) {
         // point to k-th observation vector
-        float*      x           = d_observations + k * dimension;
+        float*      x           = d_observations + k * dimension
+                                + blockIdx.x * (numObs >> 1);
         const float normSquared = pow(x[0] - m[0], 2) + pow(x[1] - m[1], 2);
-        num += d_posteriors[k + j * numObs] * normSquared;
+        num += d_posteriors[k + j * numObs + blockIdx.x * (numObs >> 1)] * normSquared;
       }
 
-      scratch[j][0] = num;
+      scratch[j][0][blockIdx.x] = num;
     }
     else if (1 == threadIdx.y) {
       float den { 0 };
 
-      for (int k = 0; k < numObs; ++k) {
-        den += d_posteriors[k + j * numObs];
+      for (int k = 0; k < (numObs >> 1); ++k) {
+        den += d_posteriors[k + j * numObs + blockIdx.x * (numObs >> 1)];
       }
 
-      scratch[j][1] = den;
+      scratch[j][1][blockIdx.x] = den;
     }
 
     __syncthreads();
 
     if (0 == threadIdx.y) {
       // num / (dimension * den)
-      d_covar_est[j] = scratch[j][0] / (dimension * scratch[j][1]);
+      d_covar_est[j] = (scratch[j][0][0] + scratch[j][0][1])
+                     / (dimension * (scratch[j][1][0] + scratch[j][1][1]));
     }
   }
 }
@@ -166,7 +168,7 @@ __host__ void CovarEstDevice(float*    d_covar_est,
 
   const dim3 threadsPerBlock(xDim, yDim);
   //const int  numBlocks = (numObs + yDim - 1) / yDim;
-  const int numBlocks = 1;
+  const int numBlocks = 2;
 
   CovarEstKernel<<< numBlocks, threadsPerBlock >>>(d_covar_est,
                                                    d_mean_est,
