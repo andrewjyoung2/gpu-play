@@ -449,6 +449,7 @@ __host__ void EM_WorkflowDevice(float*      d_error_est,
                           d_error_est,
                           sizeof(float),
                           cudaMemcpyDeviceToHost));
+    ++iter;
   }
 }
 
