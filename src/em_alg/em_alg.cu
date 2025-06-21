@@ -348,8 +348,8 @@ __host__ void EM_WorkflowHost(float&                       error_est,
 
   end      = std::chrono::high_resolution_clock::now();
   duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-  std::cout << "Time to execute EM::CUDA::IterationDevice = " << duration.count()
-            << " microseconds"                                << std::endl;
+  std::cout << "Time to execute EM::CUDA::EM_WorkflowDevice = " << duration.count()
+            << " microseconds"                                  << std::endl;
 
   // Transfer results from device to host
   start = std::chrono::high_resolution_clock::now();

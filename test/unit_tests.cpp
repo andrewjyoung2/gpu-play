@@ -809,8 +809,6 @@ TEST(CUDA, EM_Workflow)
 
   float error_est { 0.7734 };
 
-  const auto start = std::chrono::high_resolution_clock::now();
-
   EM::CUDA::EM_WorkflowHost(error_est,
                             covar_est,
                             prior_est,
@@ -820,12 +818,6 @@ TEST(CUDA, EM_Workflow)
                             mean_init,
                             covar_init.get_row(0),
                             prior_init.get_row(0));
-
-  const auto end = std::chrono::high_resolution_clock::now();
-  const auto duration
-    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-  std::cout << "Time to execute EM::CUDA::EM_Workflow = " << duration.count()
-            << " microseconds"                              << std::endl;
 
   // Compare results to Octave
   const auto exp_mean
