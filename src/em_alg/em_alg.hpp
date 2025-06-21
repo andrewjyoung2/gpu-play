@@ -18,6 +18,16 @@ void EM_Iteration(float&                       error_est,
                   const common::Vector<float>& covar_init,
                   const common::Vector<float>& prior_init);
 
+void EM_Workflow(float&                       error_est,
+                 common::Vector<float>&       covar_est,
+                 common::Vector<float>&       prior_est,
+                 common::Matrix<float>&       mean_est,
+                 const float                  error_tol,
+                 const common::Matrix<float>& observations,
+                 const common::Matrix<float>& mean_init,
+                 const common::Vector<float>& covar_init,
+                 const common::Vector<float>& prior_init);
+
 } // namspace Scalar
 
 namespace CUDA {
