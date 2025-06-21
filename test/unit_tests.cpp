@@ -546,6 +546,8 @@ TEST(Scalar, EM_Iteration)
   common::Vector<float> prior_est(numClasses);
   float                 error_est { 0.7734 };
 
+  const auto start = std::chrono::high_resolution_clock::now();
+
   EM::Scalar::EM_Iteration(error_est,
                            covar_est,
                            prior_est,
@@ -557,6 +559,12 @@ TEST(Scalar, EM_Iteration)
                            mean_init,
                            covar_init.get_row(0),
                            prior_init.get_row(0));
+
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration
+    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute EM::Scalar::EM_Iteration = " << duration.count()
+            << " microseconds"                               << std::endl;
 
   // Compare results to Octave
   const auto exp_dens
