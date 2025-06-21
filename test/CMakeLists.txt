@@ -30,6 +30,8 @@ set(TEST_FILES
   ${CMAKE_SOURCE_DIR}/src/em_alg/covar_est.cpp
   ${CMAKE_SOURCE_DIR}/src/em_alg/covar_est.cu
   ${CMAKE_SOURCE_DIR}/src/em_alg/covar_est.hpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/em_alg.hpp
+  ${CMAKE_SOURCE_DIR}/src/em_alg/em_alg.cpp
   ${CMAKE_SOURCE_DIR}/src/em_alg/mean_est.cpp
   ${CMAKE_SOURCE_DIR}/src/em_alg/mean_est.cu
   ${CMAKE_SOURCE_DIR}/src/em_alg/mean_est.hpp
