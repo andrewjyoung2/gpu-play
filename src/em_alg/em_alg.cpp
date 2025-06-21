@@ -20,7 +20,8 @@ void EM_Iteration(float&                       error_est,
                   const common::Vector<float>& covar_init,
                   const common::Vector<float>& prior_init)
 {
-  // TODO: validate inputs
+  // TODO: validate input dimensions
+
   Posterior(posteriors,
             densities,
             denominators,

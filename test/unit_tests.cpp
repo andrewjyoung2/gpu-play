@@ -618,3 +618,97 @@ TEST(Scalar, EM_Iteration)
   EXPECT_NEAR(exp_error, error_est, eps);
 }
 
+TEST(CUDA, EM_Iteration)
+{
+  const auto observations
+    = common::ReadMatrix<float>("../test/data/test1/observations.txt" );
+  const auto mean_init
+    = common::ReadMatrix<float>("../test/data/test1/initial_mean.txt");
+  const auto covar_init
+    = common::ReadMatrix<float>("../test/data/test1/initial_covariance.txt");
+  const auto prior_init
+    = common::ReadMatrix<float>("../test/data/test1/initial_priors.txt");
+
+  const int numObs     = observations.rows();
+  const int dimension  = observations.cols();
+  const int numClasses = mean_init.rows();
+
+  common::Matrix<float> posteriors(numClasses, numObs);
+  common::Matrix<float> densities(numObs, numClasses);
+  common::Vector<float> denominators(numObs);
+  common::Matrix<float> mean_est(numClasses, dimension);
+  common::Vector<float> covar_est(numClasses);
+  common::Vector<float> prior_est(numClasses);
+  float                 error_est { 0.7734 };
+
+  EM::CUDA::EM_IterationHost(error_est,
+                             covar_est,
+                             prior_est,
+                             mean_est,
+                             posteriors,
+                             densities,
+                             denominators,
+                             observations,
+                             mean_init,
+                             covar_init.get_row(0),
+                             prior_init.get_row(0));
+
+  // Compare results to Octave
+  const auto exp_dens
+    = common::ReadMatrix<float>("../test/data/test1/densities.txt");
+  const auto exp_denom
+    = common::ReadMatrix<float>("../test/data/test1/denominators.txt");
+  const auto exp_post
+    = common::ReadMatrix<float>("../test/data/test1/posteriors.txt");
+  const auto exp_mean
+    = common::ReadMatrix<float>("../test/data/test1/updated_mean.txt");
+  const auto exp_covar
+    = common::ReadMatrix<float>("../test/data/test1/updated_covar.txt");
+  const auto exp_prior
+    = common::ReadMatrix<float>("../test/data/test1/updated_prior.txt");
+  const auto exp_error
+    = common::ReadMatrix<float>("../test/data/test1/error.txt")(0, 0);
+
+  for (int k = 0; k < numObs; ++k) {
+    for (int j = 0; j < numClasses; ++j) {
+      EXPECT_NEAR(densities(k, j), exp_dens(k, j), eps);
+    }
+  }
+
+  EXPECT_EQ(exp_denom.rows(), 1);
+  EXPECT_EQ(exp_denom.cols(), numObs);
+
+  for (int k = 0; k < numObs; ++k) {
+    EXPECT_NEAR(denominators[k], exp_denom(0, k), eps);
+  }
+
+  EXPECT_EQ(exp_post.rows(), 3);
+  EXPECT_EQ(exp_post.cols(), 500);
+
+  for (int j = 0; j < numClasses; ++j) {
+    for (int k = 0; k < numObs; ++k) {
+      EXPECT_NEAR(posteriors(j, k), exp_post(j, k), eps);
+    }
+  }
+
+  for (int j = 0; j < numClasses; ++j) {
+    for (int n = 0; n < dimension; ++n) {
+      EXPECT_NEAR(mean_est(j, n), exp_mean(j, n), eps);
+    }
+  }
+  EXPECT_EQ(exp_covar.rows(), 1);
+  EXPECT_EQ(exp_covar.cols(), numClasses);
+
+  for (int j = 0; j < numClasses; ++j) {
+    EXPECT_NEAR(exp_covar(0, j), covar_est[j], eps);
+  }
+
+  EXPECT_EQ(exp_prior.rows(), 1);
+  EXPECT_EQ(exp_prior.cols(), numClasses);
+
+  for (int j = 0; j < numClasses; ++j) {
+    EXPECT_NEAR(exp_prior(0, j), prior_est[j], eps);
+  }
+
+  EXPECT_NEAR(exp_error, error_est, eps);
+}
