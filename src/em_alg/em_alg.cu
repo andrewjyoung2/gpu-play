@@ -53,6 +53,14 @@ __host__ void EM_IterationHost(float&                       error_est,
 
   auto start = std::chrono::high_resolution_clock::now();
 
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_error_est),
+             sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_covar_est),
+             covar_est.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_prior_est),
+             prior_est.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_mean_est),
+             mean_est.size() * sizeof(float)));
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_posteriors),
              posteriors.size() * sizeof(float)));
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_densities),
