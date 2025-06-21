@@ -787,4 +787,70 @@ TEST(Scalar, EM_Workflow)
     EXPECT_NEAR(exp_prior(0, j), prior_est[j], eps);
   }
 }
+TEST(CUDA, EM_Workflow)
+{
+  const auto observations
+    = common::ReadMatrix<float>("../test/data/test2/observations.txt" );
+  const auto mean_init
+    = common::ReadMatrix<float>("../test/data/test2/initial_mean.txt");
+  const auto covar_init
+    = common::ReadMatrix<float>("../test/data/test2/initial_covariance.txt");
+  const auto prior_init
+    = common::ReadMatrix<float>("../test/data/test2/initial_priors.txt");
+  const auto error_tol
+    = common::ReadMatrix<float>("../test/data/test2/error_threshold.txt")(0, 0);
+
+  const int dimension  = observations.cols();
+  const int numClasses = mean_init.rows();
+
+  common::Matrix<float> mean_est(numClasses, dimension);
+  common::Vector<float> covar_est(numClasses);
+  common::Vector<float> prior_est(numClasses);
+
+  float error_est { 0.7734 };
+
+  const auto start = std::chrono::high_resolution_clock::now();
+
+  EM::CUDA::EM_WorkflowHost(error_est,
+                            covar_est,
+                            prior_est,
+                            mean_est,
+                            error_tol,
+                            observations,
+                            mean_init,
+                            covar_init.get_row(0),
+                            prior_init.get_row(0));
+
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration
+    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute EM::CUDA::EM_Workflow = " << duration.count()
+            << " microseconds"                              << std::endl;
+
+  // Compare results to Octave
+  const auto exp_mean
+    = common::ReadMatrix<float>("../test/data/test2/mean_est.txt");
+  const auto exp_covar
+    = common::ReadMatrix<float>("../test/data/test2/covar_est.txt");
+  const auto exp_prior
+    = common::ReadMatrix<float>("../test/data/test2/prior_est.txt");
+
+  for (int j = 0; j < numClasses; ++j) {
+    for (int n = 0; n < dimension; ++n) {
+      EXPECT_NEAR(mean_est(j, n), exp_mean(j, n), eps);
+    }
+  }
+  EXPECT_EQ(exp_covar.rows(), 1);
+  EXPECT_EQ(exp_covar.cols(), numClasses);
+
+  for (int j = 0; j < numClasses; ++j) {
+    EXPECT_NEAR(exp_covar(0, j), covar_est[j], eps);
+  }
+  EXPECT_EQ(exp_prior.rows(), 1);
+  EXPECT_EQ(exp_prior.cols(), numClasses);
+
+  for (int j = 0; j < numClasses; ++j) {
+    EXPECT_NEAR(exp_prior(0, j), prior_est[j], eps);
+  }
+}
 

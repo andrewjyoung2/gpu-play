@@ -238,7 +238,220 @@ __host__ void EM_IterationDevice(float* d_error_est,
                  numClasses);
 }
 
+//------------------------------------------------------------------------------
+__host__ void EM_WorkflowHost(float&                       error_est,
+                              common::Vector<float>&       covar_est,
+                              common::Vector<float>&       prior_est,
+                              common::Matrix<float>&       mean_est,
+                              const float                  error_tol,
+                              const common::Matrix<float>& observations,
+                              const common::Matrix<float>& mean_init,
+                              const common::Vector<float>& covar_init,
+                              const common::Vector<float>& prior_init)
+{
+  ASSERT(covar_est.size() == covar_init.size());
+  ASSERT(prior_est.size() == prior_init.size());
+  ASSERT(mean_est.rows()  == mean_init.rows());
+  ASSERT(mean_est.cols()  == mean_init.cols());
+  // TODO: validate the rest
+
+  const int numObs     = observations.rows();
+  const int dimension  = observations.cols();
+  const int numClasses = mean_init.rows();
+
+  // Allocate device memory
+  float* d_error_est    { nullptr };
+  float* d_covar_est    { nullptr };
+  float* d_prior_est    { nullptr };
+  float* d_mean_est     { nullptr };
+  float* d_posteriors   { nullptr };
+  float* d_densities    { nullptr };
+  float* d_denominators { nullptr };
+  float* d_observations { nullptr };
+  float* d_mean_init    { nullptr };
+  float* d_covar_init   { nullptr };
+  float* d_prior_init   { nullptr };
+
+  auto start = std::chrono::high_resolution_clock::now();
+
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_error_est),
+             sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_covar_est),
+             covar_est.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_prior_est),
+             prior_est.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_mean_est),
+             mean_est.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_posteriors),
+             numClasses * numObs * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_densities),
+             numObs * numClasses * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_denominators),
+             numObs * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_observations),
+             observations.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_mean_init),
+             mean_init.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_covar_init),
+             covar_init.size() * sizeof(float)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_prior_init),
+             prior_init.size() * sizeof(float)));
+
+  auto end      = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to allocate device memory = " << duration.count()
+            << " microseconds"                     << std::endl;
+
+  // Transfer data from host to device
+  start = std::chrono::high_resolution_clock::now();
+
+  CUDA_CHECK(cudaMemcpy(d_observations,
+                        observations.data(),
+                        observations.size() * sizeof(float),
+                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(d_mean_init,
+                        mean_init.data(),
+                        mean_init.size() * sizeof(float),
+                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(d_covar_init,
+                        covar_init.data(),
+                        covar_init.size() * sizeof(float),
+                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(d_prior_init,
+                        prior_init.data(),
+                        prior_init.size() * sizeof(float),
+                        cudaMemcpyHostToDevice));
+
+  end      = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to transfer from host to device = " << duration.count()
+            << " microseconds"                           << std::endl;
+
+  start = std::chrono::high_resolution_clock::now();
+
+  // Run the calculation
+  EM_WorkflowDevice(d_error_est,
+                    d_covar_est,
+                    d_prior_est,
+                    d_mean_est,
+                    d_posteriors,
+                    d_densities,
+                    d_denominators,
+                    d_observations,
+                    d_mean_init,
+                    d_covar_init,
+                    d_prior_init,
+                    error_tol,
+                    dimension,
+                    numClasses,
+                    numObs);
+
+  end      = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to execute EM::CUDA::IterationDevice = " << duration.count()
+            << " microseconds"                                << std::endl;
+
+  // Transfer results from device to host
+  start = std::chrono::high_resolution_clock::now();
+
+  // TODO: may not need to transfer error_est because host already has it
+  CUDA_CHECK(cudaMemcpy(covar_est.data(),
+                        d_covar_est,
+                        covar_est.size() * sizeof(float),
+                        cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaMemcpy(prior_est.data(),
+                        d_prior_est,
+                        prior_est.size() * sizeof(float),
+                        cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaMemcpy(mean_est.data(),
+                        d_mean_est,
+                        mean_est.size() * sizeof(float),
+                        cudaMemcpyDeviceToHost));
+
+  end      = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  std::cout << "Time to transfer from device to host = " << duration.count()
+            << " microseconds"                           << std::endl;
+
+  // Cleanup
+  CUDA_CHECK(cudaFree(d_error_est));
+  CUDA_CHECK(cudaFree(d_covar_est));
+  CUDA_CHECK(cudaFree(d_prior_est));
+  CUDA_CHECK(cudaFree(d_mean_est));
+  CUDA_CHECK(cudaFree(d_posteriors));
+  CUDA_CHECK(cudaFree(d_densities));
+  CUDA_CHECK(cudaFree(d_denominators));
+  CUDA_CHECK(cudaFree(d_observations));
+  CUDA_CHECK(cudaFree(d_mean_init));
+  CUDA_CHECK(cudaFree(d_covar_init));
+  CUDA_CHECK(cudaFree(d_prior_init));
+
+  CUDA_CHECK(cudaDeviceReset());
+}
+
+//------------------------------------------------------------------------------
+__host__ void EM_WorkflowDevice(float*      d_error_est,
+                                float*      d_covar_est,
+                                float*      d_prior_est,
+                                float*      d_mean_est,
+                                float*      d_posteriors,
+                                float*      d_densities,
+                                float*      d_denominators,
+                                float*      d_observations,
+                                float*      d_mean_init,
+                                float*      d_covar_init,
+                                float*      d_prior_init,
+                                const float error_tol,
+                                const int   dimension,
+                                const int   numClasses,
+                                const int   numObs)
+{
+  const size_t max_iter { 100 };
+  // TODO: should the number of iterations be a return value?
+  size_t          iter  { 0 };
+
+  float error_est = std::numeric_limits<float>::max();
+
+  while ((error_est > error_tol) && (iter < max_iter)) {
+    // overwrite previous estimates
+    // TODO: maybe we can do this during the error estimation kernel?
+    if (0 != iter) {
+      cudaMemcpy(d_mean_init,
+                 d_mean_est,
+                 numClasses * dimension * sizeof(float),
+                 cudaMemcpyDeviceToDevice);
+      cudaMemcpy(d_covar_init,
+                 d_covar_est,
+                 numClasses * sizeof(float),
+                 cudaMemcpyDeviceToDevice);
+      cudaMemcpy(d_prior_init,
+                 d_prior_est,
+                 numClasses * sizeof(float),
+                 cudaMemcpyDeviceToDevice);
+    }
+
+    EM_IterationDevice(d_error_est,
+                       d_covar_est,
+                       d_prior_est,
+                       d_mean_est,
+                       d_posteriors,
+                       d_densities,
+                       d_denominators,
+                       d_observations,
+                       d_mean_init,
+                       d_covar_init,
+                       d_prior_init,
+                       dimension,
+                       numClasses,
+                       numObs);
+
+    CUDA_CHECK(cudaMemcpy(&error_est,
+                          d_error_est,
+                          sizeof(float),
+                          cudaMemcpyDeviceToHost));
+  }
+}
+
 } // namespace CUDA
 } // namspace EM
-
 

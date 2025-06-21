@@ -59,6 +59,31 @@ __host__ void EM_IterationDevice(float* d_error_est,
                                  const int numClasses,
                                  const int numObs);
 
+__host__ void EM_WorkflowDevice(float*      d_error_est,
+                                float*      d_covar_est,
+                                float*      d_prior_est,
+                                float*      d_mean_est,
+                                float*      d_posteriors,
+                                float*      d_densities,
+                                float*      d_denominators,
+                                float*      d_observations,
+                                float*      d_mean_init,
+                                float*      d_covar_init,
+                                float*      d_prior_init,
+                                const float error_tol,
+                                const int   dimension,
+                                const int   numClasses,
+                                const int   numObs);
+
+__host__ void EM_WorkflowHost(float&                       error_est,
+                              common::Vector<float>&       covar_est,
+                              common::Vector<float>&       prior_est,
+                              common::Matrix<float>&       mean_est,
+                              const float                  error_tol,
+                              const common::Matrix<float>& observations,
+                              const common::Matrix<float>& mean_init,
+                              const common::Vector<float>& covar_init,
+                              const common::Vector<float>& prior_init);
 } // namespace CUDA
 } // namspace EM
 
